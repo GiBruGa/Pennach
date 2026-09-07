@@ -94,5 +94,7 @@ Les grandeurs de l'app portent des noms en breton :
 - Hébergement **GitHub Pages**, dépôt GitHub dédié (indépendant des dépôts UrBizia)
 - Partage familial = un simple lien à ouvrir dans Chrome Android (+ "Ajouter à l'écran d'accueil")
 - **Limite connue et acceptée** : Web Bluetooth ne fonctionne pas sur Safari iOS. Confirmé le 2026-09-07 que tous les téléphones concernés (utilisateur, épouse, filles) sont sous Android — non bloquant.
-- Stockage local : `IndexedDB` (historique + programmes), à réévaluer si besoin de synchronisation multi-appareils plus tard
-- Stack front : à définir lors du scaffolding (React + Vite + TypeScript pressenti, cohérent avec le reste de l'écosystème UrBizia)
+- Stack front : **React + Vite + TypeScript**
+- **Stockage : Supabase** (Postgres), comme les autres outils UrBizia — décidé le 2026-09-07 pour permettre à toute la famille de retrouver son historique sur n'importe quel appareil. Projet Supabase dédié `Pennach` (org UrBizia, indépendant des autres projets).
+- **Profils multiples sans authentification** : sélecteur de profil simple (prénom) au premier lancement sur un appareil, stocké en `localStorage` sur l'appareil ; les données (programmes, historique) sont scopées par `profil_id` dans Supabase. Pas de mot de passe — usage familial privé, confidentialité basée sur le secret du lien de l'appli + policies RLS.
+- Tables : `profils`, `programmes` (5 slots par profil, `sections` en JSONB), `seances` (historique, `evenements` en JSONB)
