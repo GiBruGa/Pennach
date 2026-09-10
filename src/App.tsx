@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { HashRouter, Link, Route, Routes } from 'react-router-dom'
 import { ProfilProvider } from './context/ProfilContext'
 import { getProfil, getProfilActifId, oublierProfilActif, type Profil } from './lib/profil'
+import Accueil from './pages/Accueil'
 import SelectionProfil from './pages/SelectionProfil'
 import ProgrammesList from './pages/ProgrammesList'
 import ProgrammeEditor from './pages/ProgrammeEditor'
@@ -43,6 +44,7 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
 export default function App() {
   const [profil, setProfil] = useState<Profil | null>(null)
   const [chargementInitial, setChargementInitial] = useState(true)
+  const [demarre, setDemarre] = useState(false)
 
   useEffect(() => {
     const id = getProfilActifId()
@@ -58,6 +60,8 @@ export default function App() {
       .catch(() => oublierProfilActif())
       .finally(() => setChargementInitial(false))
   }, [])
+
+  if (!demarre) return <Accueil onCommencer={() => setDemarre(true)} />
 
   if (chargementInitial) return <p>Chargement…</p>
 

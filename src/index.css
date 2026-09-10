@@ -1,26 +1,19 @@
 :root {
-  --text: #2c2c34;
-  --bg: #fdfdfd;
-  --bg-carte: #f4f3f6;
-  --border: #dcdbe0;
-  --accent: #1b6ec2;
-  --rouge: #d64545;
-  --vert: #3aa65a;
+  /* Thème sombre nautique volontairement fixe (pas de bascule clair/sombre) :
+     le fond photographique fixé sur toutes les pages n'a pas d'équivalent clair cohérent. */
+  --text: #e9edf5;
+  --bg: #0a1930;
+  --bg-carte: rgba(15, 27, 51, 0.78);
+  --bg-panneau: rgba(8, 18, 36, 0.72);
+  --border: rgba(255, 255, 255, 0.14);
+  --accent: #6fb2f0;
+  --rouge: #e0685f;
+  --vert: #4cbf7a;
 
   font: 16px/1.4 system-ui, 'Segoe UI', Roboto, sans-serif;
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text);
   background: var(--bg);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #e5e5ea;
-    --bg: #121214;
-    --bg-carte: #1e1e22;
-    --border: #35353b;
-    --accent: #6fb2f0;
-  }
 }
 
 * {
@@ -29,7 +22,8 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: #0a1930;
+  min-height: 100svh;
 }
 
 button {
