@@ -442,7 +442,20 @@ main > * {
   width: 100%;
 }
 
-.disposition-seance-live {
+/* Bandeaux fins section précédente/suivante, cf. maquette Pennac'h - Écrans.pdf page 5 :
+   "Keitad" = moyenne — en haut les valeurs moyennes réalisées, en bas les consignes à venir. */
+.bandeau-section-precedente,
+.bandeau-section-suivante {
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.8rem;
+  opacity: 0.85;
+  text-align: left;
+}
+
+.corps-seance-live {
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -490,66 +503,77 @@ main > * {
   color: white;
 }
 
-.chrono-seance {
-  font-size: 1.3rem;
+.horloge-seance {
+  font-size: 1.6rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
 }
 
-.panneau-sections {
+.carte-section-courante {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.85);
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.92);
   color: #1a1a1a;
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 18px 22px;
   overflow-y: auto;
   text-align: left;
 }
 
-.ligne-section {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+.entete-carte-courante {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.75;
 }
 
-.ligne-section:last-child {
-  border-bottom: none;
+.grille-valeurs-courantes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
-.ligne-section strong {
-  display: block;
+.valeur-courante {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border-radius: 12px;
+  background: rgba(10, 25, 48, 0.06);
+  padding: 12px 8px;
+}
+
+.valeur-courante-label {
   font-size: 0.75rem;
   text-transform: uppercase;
   opacity: 0.6;
-  margin-bottom: 4px;
 }
 
-.ligne-section-precedente,
-.ligne-section-suivante {
-  font-size: 0.85rem;
-}
-
-.ligne-section-courante {
-  font-size: 1.15rem;
-}
-
-.nerzh-gros,
-.amzervezh-gros {
-  font-size: 2.2rem;
+.valeur-courante-chiffre {
+  font-size: 2rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 @media (orientation: portrait), (max-width: 700px) {
-  .disposition-seance-live {
+  .corps-seance-live {
     flex-direction: column;
   }
 
-  .panneau-sections {
+  .carte-section-courante {
     overflow-y: visible;
+  }
+
+  .grille-valeurs-courantes {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

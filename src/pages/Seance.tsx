@@ -18,6 +18,14 @@ function formatMMSS(ms: number): string {
   return `${min}:${sec.toString().padStart(2, '0')}`
 }
 
+function formatHHMMSS(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000))
+  const h = Math.floor(total / 3600)
+  const min = Math.floor((total % 3600) / 60)
+  const sec = total % 60
+  return `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+}
+
 function biper(frequence: number, dureeMs: number) {
   const ctx = new AudioContext()
   const osc = ctx.createOscillator()
@@ -423,63 +431,77 @@ export default function Seance() {
 
   return (
     <div className="ecran-seance ecran-seance-en-cours">
-      <div className="disposition-seance-live">
+      <div className="bandeau-section-precedente">
+        {sectionPrecedente ? (
+          <>
+            Nerzh Keitad <strong>{sectionPrecedente.nerzh}</strong> · Tizh Keitad{' '}
+            <strong>{sectionPrecedente.tizhMoyen}</strong> Riw/min · Pellder{' '}
+            <strong>{sectionPrecedente.pellderKm.toFixed(2)}</strong> km · Energiezh{' '}
+            <strong>{sectionPrecedente.energiezhKcal}</strong> kcal
+          </>
+        ) : (
+          '—'
+        )}
+      </div>
+
+      <div className="corps-seance-live">
+        <div className="carte-section-courante">
+          <div className="entete-carte-courante">
+            {sectionActuelle?.zoneKalon && (
+              <span>
+                Kalon {sectionActuelle.zoneKalon.min}-{sectionActuelle.zoneKalon.max} bpm
+                {sectionActuelle.zoneKalon.libelle && ` (${sectionActuelle.zoneKalon.libelle})`}
+              </span>
+            )}
+            {sectionActuelle && <span>Kemenn : {sectionActuelle.explication}</span>}
+          </div>
+
+          <div className="grille-valeurs-courantes">
+            <div className="valeur-courante">
+              <span className="valeur-courante-label">Nerzh</span>
+              <span className="valeur-courante-chiffre">{nerzhReel ?? sectionActuelle?.nerzh}</span>
+            </div>
+            <div className="valeur-courante">
+              <span className="valeur-courante-label">Tizh</span>
+              <span className="valeur-courante-chiffre">{tizhReel}</span>
+            </div>
+            <div className="valeur-courante">
+              <span className="valeur-courante-label">Amzervezh</span>
+              <span className="valeur-courante-chiffre">
+                {formatMMSS(Math.max(0, tempsRestantSection))}
+              </span>
+            </div>
+            <div className="valeur-courante">
+              <span className="valeur-courante-label">Pellder</span>
+              <span className="valeur-courante-chiffre">{distanceKm.toFixed(2)}</span>
+            </div>
+            <div className="valeur-courante">
+              <span className="valeur-courante-label">Energiezh</span>
+              <span className="valeur-courante-chiffre">{energieKcal}</span>
+            </div>
+          </div>
+        </div>
+
         <div className="zone-circulaire">
           <div
             className={`cercle-tizh cercle-${phase === 'pause' ? 'bleu' : couleurCercle} ${clignote ? 'clignote' : ''}`}
           >
             <span className="tizh-valeur">{sectionActuelle?.tizh}</span>
           </div>
-          <div className="chrono-seance">Séance : {formatMMSS(Math.max(0, tempsRestantSeance))}</div>
+          <div className="horloge-seance">{formatHHMMSS(tempsEcouleSeance)}</div>
         </div>
+      </div>
 
-        <div className="panneau-sections">
-          {sectionPrecedente && (
-            <div className="ligne-section ligne-section-precedente">
-              <strong>Section précédente</strong>
-              <div>
-                Nerzh {sectionPrecedente.nerzh} · Tizh moyen {sectionPrecedente.tizhMoyen} Riw/min
-              </div>
-              <div>
-                Pellder {sectionPrecedente.pellderKm.toFixed(2)} km · Energiezh{' '}
-                {sectionPrecedente.energiezhKcal} kcal
-              </div>
-            </div>
-          )}
-
-          <div className="ligne-section ligne-section-courante">
-            <strong>En cours</strong>
-            <div className="nerzh-gros">Nerzh {nerzhReel ?? sectionActuelle?.nerzh}</div>
-            <div>
-              Pellder {distanceKm.toFixed(2)} km · Energiezh {energieKcal} kcal
-            </div>
-            <div className="amzervezh-gros">Amzervezh {formatMMSS(Math.max(0, tempsRestantSection))}</div>
-            {sectionActuelle?.zoneKalon && (
-              <div>
-                Kalon {sectionActuelle.zoneKalon.min}-{sectionActuelle.zoneKalon.max} bpm
-                {sectionActuelle.zoneKalon.libelle && ` (${sectionActuelle.zoneKalon.libelle})`}
-              </div>
-            )}
-            {sectionActuelle && <div>Kemenn : {sectionActuelle.explication}</div>}
-          </div>
-
-          {sectionSuivante && (
-            <div className="ligne-section ligne-section-suivante">
-              <strong>Section suivante</strong>
-              <div>
-                Nerzh {sectionSuivante.nerzh} · Tizh {sectionSuivante.tizh} Riw/min · Padelezh{' '}
-                {formatMMSS(sectionSuivante.dureeSecondes * 1000)}
-              </div>
-              {sectionSuivante.zoneKalon && (
-                <div>
-                  Kalon {sectionSuivante.zoneKalon.min}-{sectionSuivante.zoneKalon.max} bpm
-                  {sectionSuivante.zoneKalon.libelle && ` (${sectionSuivante.zoneKalon.libelle})`}
-                </div>
-              )}
-              <div>Kemenn : {sectionSuivante.explication}</div>
-            </div>
-          )}
-        </div>
+      <div className="bandeau-section-suivante">
+        {sectionSuivante ? (
+          <>
+            Nerzh <strong>{sectionSuivante.nerzh}</strong> · Tizh{' '}
+            <strong>{sectionSuivante.tizh}</strong> Riw/min · Padelezh{' '}
+            <strong>{formatMMSS(sectionSuivante.dureeSecondes * 1000)}</strong>
+          </>
+        ) : (
+          'Dernière section'
+        )}
       </div>
 
       <div className="actions-seance">
@@ -488,7 +510,7 @@ export default function Seance() {
         ) : (
           <button onClick={reprendre}>Reprendre</button>
         )}
-        <button onClick={() => terminer('arretee', Date.now())}>Arrêter</button>
+        <button onClick={() => terminer('arretee', Date.now())}>Arrêter la séance</button>
       </div>
     </div>
   )
