@@ -96,12 +96,13 @@ export default function CarnetDeSuivi() {
     fermer()
   }
 
-  function ajouterEtape() {
+  async function ajouterEtape() {
     if (!carnet) return
     const nouvelle = nouvelleEtape(0)
-    sauvegarderCarnet(
-      [...carnet.etapes, nouvelle].map((e, i) => ({ ...e, numero: i + 1 })),
-    )
+    const etapes = [...carnet.etapes, nouvelle].map((e, i) => ({ ...e, numero: i + 1 }))
+    await sauvegarderCarnet(etapes)
+    const ajoutee = etapes.find((e) => e.id === nouvelle.id)
+    if (ajoutee) ouvrir(ajoutee)
   }
 
   async function ajouterApres(etapeId: string) {
@@ -131,12 +132,12 @@ export default function CarnetDeSuivi() {
         <table className="table-carnet">
           <thead>
             <tr>
-              <th>N°</th>
+              <th className="cellule-numerique">N°</th>
               <th>Type</th>
-              <th>Nerzh</th>
-              <th>Tizh</th>
-              <th>Adnerzhañ</th>
-              <th>Padelezh</th>
+              <th className="cellule-numerique">Nerzh</th>
+              <th className="cellule-numerique">Tizh</th>
+              <th className="cellule-numerique">Adnerzhañ</th>
+              <th className="cellule-numerique">Padelezh</th>
               <th>Résultat</th>
               <th>Arabat Disoñjal</th>
             </tr>
@@ -153,15 +154,15 @@ export default function CarnetDeSuivi() {
                     className={`ligne-etape${estProchaine ? ' ligne-prochaine' : ''}${estOuverte ? ' ligne-ouverte' : ''}`}
                     onClick={() => (estOuverte ? fermer() : ouvrir(etape))}
                   >
-                    <td>
+                    <td className="cellule-numerique">
                       {etape.numero}
                       {estProchaine && <span className="badge-prochaine">prochaine</span>}
                     </td>
                     <td>{etape.typeSession}</td>
-                    <td>{etape.parametres.puissance}</td>
-                    <td>{etape.parametres.rythme}</td>
-                    <td>{etape.parametres.recuperation}</td>
-                    <td>{etape.parametres.dureeTotaleMinutes} min</td>
+                    <td className="cellule-numerique">{etape.parametres.puissance}</td>
+                    <td className="cellule-numerique">{etape.parametres.rythme}</td>
+                    <td className="cellule-numerique">{etape.parametres.recuperation}</td>
+                    <td className="cellule-numerique">{etape.parametres.dureeTotaleMinutes} min</td>
                     <td className="cellule-resultat">
                       {realisee ? (
                         <>

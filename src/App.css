@@ -184,6 +184,11 @@ main > * {
   vertical-align: top;
 }
 
+/* Règle générale : toute cellule contenant une valeur numérique est centrée, quel que soit le tableau. */
+.cellule-numerique {
+  text-align: center;
+}
+
 .table-carnet th {
   position: sticky;
   top: 0;
