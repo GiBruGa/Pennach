@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
 import { getPlanProgression, saveSeance, savePlanProgression } from '../lib/storage'
 import { genererSections } from '../lib/generateur'
@@ -404,6 +404,9 @@ export default function Seance() {
   if (phase === 'avant') {
     return (
       <div className="ecran-seance ecran-seance-avant">
+        <Link to="/" className="lien-retour-carnet">
+          ◀ Retour
+        </Link>
         <h1>{programme.nom}</h1>
         {erreur && <p className="erreur">{erreur}</p>}
         {!connecte ? (

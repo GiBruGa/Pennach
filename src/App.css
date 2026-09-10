@@ -131,6 +131,23 @@ main > * {
   padding: 16px;
 }
 
+/* Écran de séance en direct : le bandeau de menu est masqué (voir App.tsx) pour
+   laisser toute la hauteur disponible à la maquette Pennac'h - Écrans.pdf page 5. */
+main.main-seance {
+  padding: 6px;
+}
+
+main.main-seance > * {
+  padding: 8px 10px;
+}
+
+.lien-retour-carnet {
+  align-self: flex-start;
+  color: var(--text);
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
 .ecran-accueil {
   position: relative;
   min-height: 100svh;
@@ -496,9 +513,10 @@ main > * {
 }
 
 .ecran-seance-en-cours {
-  gap: 12px;
+  gap: 6px;
   justify-content: space-between;
   width: 100%;
+  min-height: calc(100svh - 28px);
 }
 
 /* Bandeaux fins section précédente/suivante, cf. maquette Pennac'h - Écrans.pdf page 5 :
@@ -506,19 +524,20 @@ main > * {
 .bandeau-section-precedente,
 .bandeau-section-suivante {
   width: 100%;
-  padding: 8px 14px;
-  border-radius: 10px;
+  padding: 4px 12px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
-  font-size: 0.8rem;
+  font-size: clamp(0.6rem, 2vh, 0.8rem);
   opacity: 0.85;
   text-align: left;
+  flex: 0 0 auto;
 }
 
 .corps-seance-live {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 16px;
+  gap: 10px;
   width: 100%;
   flex: 1;
   min-height: 0;
@@ -529,12 +548,12 @@ main > * {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 4px;
   flex: 0 0 auto;
 }
 
 .cercle-tizh {
-  width: min(42vmin, 45vw, 320px);
+  width: min(28vh, 30vw, 220px);
   aspect-ratio: 1;
   border-radius: 50%;
   display: flex;
@@ -557,13 +576,13 @@ main > * {
 }
 
 .cercle-tizh .tizh-valeur {
-  font-size: 12vmin;
+  font-size: clamp(1.5rem, 9vh, 3rem);
   font-weight: 700;
   color: white;
 }
 
 .horloge-seance {
-  font-size: 1.6rem;
+  font-size: clamp(0.9rem, 3.4vh, 1.5rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
@@ -575,12 +594,12 @@ main > * {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 14px;
+  gap: clamp(4px, 1.6vh, 14px);
   background: rgba(255, 255, 255, 0.92);
   color: #1a1a1a;
   border-radius: 16px;
-  padding: 18px 22px;
-  overflow-y: auto;
+  padding: clamp(6px, 1.6vh, 18px) clamp(8px, 2vw, 22px);
+  overflow: hidden;
   text-align: left;
 }
 
@@ -589,35 +608,36 @@ main > * {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: clamp(0.6rem, 2.2vh, 0.9rem);
   font-weight: 600;
   opacity: 0.75;
 }
 
 .grille-valeurs-courantes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(4px, 1vw, 12px);
 }
 
 .valeur-courante {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  border-radius: 12px;
+  gap: 2px;
+  border-radius: 10px;
   background: rgba(10, 25, 48, 0.06);
-  padding: 12px 8px;
+  padding: clamp(4px, 1.4vh, 12px) 4px;
+  min-width: 0;
 }
 
 .valeur-courante-label {
-  font-size: 0.75rem;
+  font-size: clamp(0.5rem, 1.6vh, 0.75rem);
   text-transform: uppercase;
   opacity: 0.6;
 }
 
 .valeur-courante-chiffre {
-  font-size: 2rem;
+  font-size: clamp(1rem, 5vh, 2rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -625,10 +645,6 @@ main > * {
 @media (orientation: portrait), (max-width: 700px) {
   .corps-seance-live {
     flex-direction: column;
-  }
-
-  .carte-section-courante {
-    overflow-y: visible;
   }
 
   .grille-valeurs-courantes {
@@ -639,7 +655,8 @@ main > * {
 .actions-seance {
   display: flex;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 2px;
+  flex: 0 0 auto;
 }
 
 .actions-seance button {
