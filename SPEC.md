@@ -136,3 +136,10 @@ suite libre d'étapes (pas limité à 5 comme les programmes), chacune avec :
 
 Un profil peut créer plusieurs plans. Stockage : table `plans_progression`, scopée par
 `profil_id` comme le reste.
+
+## 12. Convention de mise en page (2026-09-10)
+
+Le personnage du fond illustré (le rameur, `public/fond.jpg`) est centré dans l'image.
+**Tout panneau de contenu (menu, carte, formulaire...) doit être aligné à gauche de l'écran et
+de largeur limitée (`max-width` réduit, pas de `margin: 0 auto`)**, pour ne jamais recouvrir le
+personnage — ni maintenant ni sur un écran ajouté plus tard. Voir `main` dans `src/App.css`.
