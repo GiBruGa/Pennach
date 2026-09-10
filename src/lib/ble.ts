@@ -2,6 +2,7 @@ export interface RowerData {
   tizh: number // stroke rate, coups/min
   strokeCount?: number
   nerzh?: number // resistance level
+  distanceMetres?: number
   totalEnergyKcal?: number
   frequenceCardiaque?: number
   amzerEcouleeSecondes?: number
@@ -39,6 +40,7 @@ export function parseRowerData(value: DataView): RowerData {
     offset += 1
   }
   if (flags & FLAG_TOTAL_DISTANCE) {
+    data.distanceMetres = value.getUint8(offset) | (value.getUint8(offset + 1) << 8) | (value.getUint8(offset + 2) << 16)
     offset += 3
   }
   if (flags & FLAG_INSTANT_PACE) {

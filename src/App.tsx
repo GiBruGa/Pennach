@@ -4,12 +4,8 @@ import { ProfilProvider } from './context/ProfilContext'
 import { getProfil, getProfilActifId, oublierProfilActif, type Profil } from './lib/profil'
 import Accueil from './pages/Accueil'
 import SelectionProfil from './pages/SelectionProfil'
-import ProgrammesList from './pages/ProgrammesList'
-import ProgrammeEditor from './pages/ProgrammeEditor'
 import Seance from './pages/Seance'
-import Historique from './pages/Historique'
-import PlansProgression from './pages/PlansProgression'
-import PlanProgressionEditeur from './pages/PlanProgressionEditeur'
+import CarnetDeSuivi from './pages/CarnetDeSuivi'
 import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
 
@@ -22,20 +18,14 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
             Pennac'h
           </Link>
           <nav>
-            <Link to="/progression">Karned Heuliañ</Link>
-            <Link to="/historique">Historique</Link>
             <Link to="/test-bluetooth">Test Bluetooth</Link>
             <button onClick={changerProfil}>{profil.nom} ▾</button>
           </nav>
         </header>
         <main>
           <Routes>
-            <Route path="/" element={<ProgrammesList />} />
-            <Route path="/programme/:slot" element={<ProgrammeEditor />} />
-            <Route path="/seance/:slot" element={<Seance />} />
-            <Route path="/historique" element={<Historique />} />
-            <Route path="/progression" element={<PlansProgression />} />
-            <Route path="/progression/:id" element={<PlanProgressionEditeur />} />
+            <Route path="/" element={<CarnetDeSuivi />} />
+            <Route path="/seance/:planId/:etapeId" element={<Seance />} />
             <Route path="/test-bluetooth" element={<TestBluetooth />} />
           </Routes>
         </main>

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
-import { getProgramme, saveSeance } from '../lib/storage'
+import { getPlanProgression, saveSeance, savePlanProgression } from '../lib/storage'
+import { genererSections } from '../lib/generateur'
 import { RowerConnection } from '../lib/ble'
-import type { EvenementHistorique, Programme } from '../types'
+import type { EtapeProgression, EvenementHistorique, PlanProgression, Programme } from '../types'
 
 const COMPTE_A_REBOURS_MS = 10_000
 const STABILITE_NERZH_MS = 5_000
@@ -26,14 +27,28 @@ function biper(frequence: number, dureeMs: number) {
   osc.onended = () => ctx.close()
 }
 
+function programmeDepuisEtape(plan: PlanProgression, etape: EtapeProgression): Programme {
+  return {
+    slot: etape.numero,
+    nom: `${plan.nom} — Séance ${etape.numero}`,
+    dureeTotaleSecondes: etape.parametres.dureeTotaleMinutes * 60,
+    seuilEcartTizhPourcent: 15,
+    signalSonoreTizh: false,
+    sections: genererSections(etape.parametres),
+  }
+}
+
 type Phase = 'avant' | 'compte_a_rebours' | 'en_cours' | 'pause' | 'fini'
 
 export default function Seance() {
   const { profil } = useProfil()
-  const { slot } = useParams()
+  const { planId, etapeId } = useParams()
   const navigate = useNavigate()
 
+  const [plan, setPlan] = useState<PlanProgression | null>(null)
+  const [etape, setEtape] = useState<EtapeProgression | null>(null)
   const [programme, setProgramme] = useState<Programme | null>(null)
+  const [erreurChargement, setErreurChargement] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>('avant')
   const [connecte, setConnecte] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -53,10 +68,26 @@ export default function Seance() {
   const pauseDebutRef = useRef<number | null>(null)
   const sectionRef = useRef<Programme['sections'][number] | undefined>(undefined)
   const dernierBipSecondeRef = useRef<number | null>(null)
+  const distanceMetresRef = useRef(0)
+  const energieKcalRef = useRef(0)
 
   useEffect(() => {
-    getProgramme(profil.id, Number(slot)).then(setProgramme)
-  }, [profil.id, slot])
+    if (!planId || !etapeId) return
+    getPlanProgression(planId).then((p) => {
+      if (!p) {
+        setErreurChargement('Plan introuvable.')
+        return
+      }
+      const e = p.etapes.find((x) => x.id === etapeId)
+      if (!e) {
+        setErreurChargement('Séance introuvable dans ce plan.')
+        return
+      }
+      setPlan(p)
+      setEtape(e)
+      setProgramme(programmeDepuisEtape(p, e))
+    })
+  }, [planId, etapeId])
 
   const sectionActuelle = programme?.sections[sectionIndex]
   const sectionSuivante = programme?.sections[sectionIndex + 1]
@@ -108,8 +139,9 @@ export default function Seance() {
       }
       setPhase('fini')
       if (programme) {
+        const seanceId = crypto.randomUUID()
         await saveSeance(profil.id, {
-          id: crypto.randomUUID(),
+          id: seanceId,
           programmeSlot: programme.slot,
           programmeNom: programme.nom,
           debut: debutSeanceRef.current,
@@ -117,11 +149,29 @@ export default function Seance() {
           statut,
           evenements: evenementsRef.current,
         })
+        if (plan && etape) {
+          const etapeMaj: EtapeProgression = {
+            ...etape,
+            seanceId,
+            dateRealisee: maintenant,
+            dureeReelleSecondes: Math.round((maintenant - debutSeanceRef.current) / 1000),
+            kmRealises:
+              distanceMetresRef.current > 0
+                ? Math.round(distanceMetresRef.current) / 1000
+                : etape.kmRealises,
+            energieDepenseeKcal:
+              energieKcalRef.current > 0 ? energieKcalRef.current : etape.energieDepenseeKcal,
+          }
+          await savePlanProgression({
+            ...plan,
+            etapes: plan.etapes.map((e) => (e.id === etape.id ? etapeMaj : e)),
+          })
+        }
       }
-      navigate('/historique')
+      navigate('/')
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [programme, profil.id, nerzhReel, clorreSegment, navigate],
+    [programme, profil.id, plan, etape, nerzhReel, clorreSegment, navigate],
   )
 
   useEffect(() => {
@@ -190,6 +240,8 @@ export default function Seance() {
       await conn.prendreLeControle()
       await conn.subscribeRowerData((data) => {
         setTizhReel(data.tizh)
+        if (data.distanceMetres !== undefined) distanceMetresRef.current = data.distanceMetres
+        if (data.totalEnergyKcal !== undefined) energieKcalRef.current = data.totalEnergyKcal
       })
       await conn.subscribeStatus((event) => {
         if (event.nerzh === undefined) return
@@ -249,6 +301,7 @@ export default function Seance() {
   // Convention (à ajuster si besoin) : rouge = trop rapide, vert = trop lent.
   const couleurCercle = !horsSeuil ? 'bleu' : ecartTizhPourcent > 0 ? 'rouge' : 'vert'
 
+  if (erreurChargement) return <p className="erreur">{erreurChargement}</p>
   if (!programme) return <p>Chargement…</p>
 
   if (phase === 'avant') {

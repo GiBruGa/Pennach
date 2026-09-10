@@ -57,16 +57,17 @@ export interface ParametresGeneration {
 export interface EtapeProgression {
   id: string
   numero: number
-  phase: string
+  typeSession: string // ex: "Reiñ Bec'h" (HIIT) — seul type existant pour l'instant
   parametres: ParametresGeneration
-  // Renseigné après coup, une fois la séance réellement faite :
+  // Renseigné automatiquement à la fin de la séance liée (voir seanceId) :
+  // Deiziad (date), Padelezh (durée réelle), Pellder (distance), Energiezh (énergie)
   seanceId?: string
-  dateRealisee?: number // timestamp ms
-  frequenceCardiaqueMoyenne?: number
-  frequenceCardiaqueMax?: number
-  kmRealises?: number
-  energieDepensee?: number
-  remarques?: string
+  dateRealisee?: number // timestamp ms — Deiziad
+  dureeReelleSecondes?: number // Padelezh
+  kmRealises?: number // Pellder
+  energieDepenseeKcal?: number // Energiezh
+  // Renseigné par l'utilisateur :
+  remarques?: string // Arabat Disoñjal
 }
 
 export interface PlanProgression {

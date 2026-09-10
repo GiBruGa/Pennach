@@ -114,84 +114,6 @@ main > * {
   margin-top: 24px;
 }
 
-.liste-programmes,
-.liste-seances,
-.liste-sections {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.carte-programme,
-.carte-seance,
-.carte-section {
-  background: var(--bg-carte);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.carte-programme {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.carte-programme .infos {
-  display: flex;
-  flex-direction: column;
-}
-
-.carte-programme .actions {
-  display: flex;
-  gap: 10px;
-}
-
-.carte-seance {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: center;
-}
-
-.statut-terminee {
-  color: var(--vert);
-}
-
-.statut-arretee {
-  color: var(--rouge);
-}
-
-.ecran-editeur-programme label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
-}
-
-.ecran-editeur-programme input,
-.ecran-editeur-programme textarea {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-}
-
-.case-a-cocher {
-  flex-direction: row !important;
-  align-items: center;
-  gap: 8px !important;
-}
-
-.carte-section .note {
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
 .actions-bas {
   display: flex;
   justify-content: flex-end;
@@ -217,86 +139,118 @@ main > * {
   color: var(--vert);
 }
 
-.panneau-generateur {
-  background: var(--bg-carte);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  margin: 12px 0;
-}
-
-.panneau-generateur label,
-.ecran-editeur-programme .carte-section label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-}
-
-.plage-kalon {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.plage-kalon input[type='number'] {
-  width: 70px;
-}
-
-.plage-kalon input[type='text'] {
-  flex: 1;
-}
-
 .zone-kalon {
   opacity: 0.8;
   font-size: 0.95rem;
 }
 
-.liste-etapes-progression {
-  list-style: none;
+.badge-prochaine {
+  margin-left: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 1px 6px;
+  vertical-align: middle;
+}
+
+.barre-outils-carnet {
+  margin-bottom: 10px;
+}
+
+.table-carnet-conteneur {
+  max-height: 70vh;
+  overflow: auto;
+  border-radius: 10px;
+}
+
+.table-carnet {
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.table-carnet th,
+.table-carnet td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table-carnet th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-carte);
+  text-align: left;
+}
+
+.table-carnet tr.ligne-prochaine td {
+  background: rgba(111, 178, 240, 0.12);
+}
+
+.table-carnet .cellule-resultat {
+  white-space: normal;
+  min-width: 160px;
+  font-size: 0.8rem;
+}
+
+.ligne-etape {
+  cursor: pointer;
+}
+
+.ligne-etape:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ligne-ouverte td {
+  background: rgba(111, 178, 240, 0.08);
+}
+
+.ligne-edition td {
   padding: 0;
+  border-bottom: 2px solid var(--accent);
+}
+
+.panneau-edition {
+  white-space: normal;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.carte-etape-progression {
-  background: var(--bg-carte);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.carte-etape-progression label,
-.ecran-plan-progression > label {
+.panneau-edition label {
   display: flex;
   flex-direction: column;
   gap: 4px;
   font-size: 0.9rem;
-  margin-bottom: 8px;
 }
 
-.carte-etape-progression input,
-.carte-etape-progression textarea,
-.ecran-plan-progression > label input {
+.panneau-edition input,
+.panneau-edition select,
+.panneau-edition textarea {
   padding: 6px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
+  font-size: 0.9rem;
 }
 
-.ligne-parametres,
-.ligne-resultats {
+.resume-resultat {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
-.ligne-parametres label,
-.ligne-resultats label {
-  min-width: 100px;
+.actions-panneau {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* Écran de séance : pensé pour le mode paysage */

@@ -125,17 +125,51 @@ programme, à partir de 4 critères, au lieu de saisir chaque section à la main
   du programme (confirmation demandée), le résultat reste ensuite éditable section par section
   comme avant
 
-## 11. Plans de progression
+## 11. Karned Heuliañ (carnet de suivi) — refonte du 2026-09-10/11
 
-Reprise de la feuille "Carnet de Suivi" du même classeur : un plan de progression est une
-suite libre d'étapes (pas limité à 5 comme les programmes), chacune avec :
-- un nom de **phase** (texte libre, ex: "Phase 1 - Adaptation Volume")
-- les **4 critères cibles** (mêmes que §10)
-- des **résultats réels** renseignés après coup : date réalisée, Kalon moyen/max, km
-  parcourus, énergie dépensée, remarques libres
+**Karned Heuliañ devient le cœur unique de l'appli**, à la place des anciens écrans
+"Programmes" (5 slots) et "Historique", supprimés. Chaque profil a **un seul carnet**
+(auto-créé au premier accès, table `plans_progression`, `getOuCreerCarnet()` dans
+`storage.ts`) — pas de notion de plans multiples ni de sélection de plan.
 
-Un profil peut créer plusieurs plans. Stockage : table `plans_progression`, scopée par
-`profil_id` comme le reste.
+**Structure d'une étape** (`EtapeProgression`) — reprise de la feuille "Carnet de Suivi" du
+classeur Excel de référence, sans la colonne "Phase" (supprimée le 2026-09-11 ; son contenu,
+pour les étapes déjà présentes, a été basculé dans Arabat Disoñjal) :
+- **Type de séance** : un seul type existe pour l'instant, **Reiñ Bec'h** (HIIT — "mouiller le
+  maillot"). D'autres types pourront s'ajouter à `TYPES_SESSION` dans `CarnetDeSuivi.tsx`.
+- **Nerzh / Tizh / Récup / Amzer** : les mêmes 4 critères qu'en §10 (Puissance/Rythme/
+  Récupération/Durée), continuent à piloter `genererSections()` (courbe EvolTemps) — le
+  renommage en vocabulaire Tizh/Nerzh/Amzer est un habillage d'affichage, pas un changement du
+  moteur de génération.
+- **Résultat**, renseigné **automatiquement** à la fin de la séance liée (voir §13) : Deiziad
+  (date), Padelezh (durée réelle), Pellder (distance), Energiezh (énergie).
+- **Arabat Disoñjal** (« à retenir ») : remarque libre, **par étape** (pas un commentaire
+  global), seul champ modifiable par l'utilisateur une fois la séance réalisée.
+
+**Interaction** : la liste est un tableau compact façon Excel (`table-carnet`, une ligne =
+une étape). Cliquer une ligne l'ouvre en édition (une seule à la fois) :
+- étape **à venir** : Type + les 4 critères sont modifiables ; actions *Sortir* (annule),
+  *Supprimer*, *Sauvegarder*, *Lancer* (sauvegarde puis bascule sur l'écran de séance).
+- étape **réalisée** : seul Arabat Disoñjal est modifiable ; actions *Supprimer*, *Fermer
+  (sauvegarde)*.
+
+**Ajouter une séance** : bouton en haut du tableau (`barre-outils-carnet`). Si une étape est
+ouverte, le bouton devient *Ajouter après* et insère juste après elle ; sinon la nouvelle étape
+est ajoutée en fin de liste.
+
+**Positionnement automatique** : à l'ouverture, la liste défile jusqu'à la première étape non
+réalisée (`indexProchaine`, badge "prochaine"), dans un conteneur à défilement vertical borné
+(`table-carnet-conteneur`, `max-height`) pour naviguer entre séances passées et futures.
+
+**Vocabulaire** : les termes bretons (Karned Heuliañ, Reiñ Bec'h, Tizh, Nerzh, Amzer, Kalon,
+Deiziad, Padelezh, Pellder, Energiezh, Arabat Disoñjal) **ne sont jamais glosés en français**
+dans l'interface — décision explicite du 2026-09-11, les utilisateurs doivent deviner/apprendre
+le sens par l'usage plutôt que par une traduction entre parenthèses. Les noms de colonnes du
+tableau restent affichés (ce n'est pas la même règle que les glosses).
+
+**Import** : les 20 séances du classeur Excel de référence (`Rameur - Programme PP MIIT.xlsm`,
+feuille "Carnet de Suivi") ont été importées dans le carnet du profil GBG via SQL direct
+(phases d'origine repliées dans Arabat Disoñjal lors du retrait de la colonne Phase).
 
 ## 12. Convention de mise en page (2026-09-10)
 
@@ -143,3 +177,28 @@ Le personnage du fond illustré (le rameur, `public/fond.jpg`) est centré dans 
 **Tout panneau de contenu (menu, carte, formulaire...) doit être aligné à gauche de l'écran et
 de largeur limitée (`max-width` réduit, pas de `margin: 0 auto`)**, pour ne jamais recouvrir le
 personnage — ni maintenant ni sur un écran ajouté plus tard. Voir `main` dans `src/App.css`.
+
+## 13. PWA installable
+
+Manifest complet (`public/manifest.json`, lié depuis `index.html`) : icônes 192/512/512
+maskable/apple-touch générées depuis `Pennac'h - Logo Simple Blanc.svg` composé sur fond bleu
+marine (`#0a1930`) — un logo blanc seul sur fond transparent ne suffit pas comme icône d'accueil.
+Une PWA déjà installée ne reprend pas une icône mise à jour automatiquement : il faut
+désinstaller/réinstaller (ou "Ajouter à l'écran d'accueil" à nouveau) après tout changement de
+logo ou de manifest.
+
+## 14. Test Bluetooth
+
+Écran dédié (`/test-bluetooth`, `TestBluetooth.tsx`) pour valider la liaison sans passer par une
+séance complète : connexion au rameur, consigne "Ramez 30s pour que je puisse vérifier la
+liaison avec votre rameur Merac'h", décompte, comptage des trames Rower Data reçues, verdict
+succès/échec à la fin.
+
+## 15. Distance (Pellder) — limite matérielle constatée
+
+`parseRowerData()` extrait le champ Distance Totale (uint24, mètres) du flux FTMS quand le bit
+correspondant du champ `flags` est positionné. **Sur le R15 Pro testé, ce bit n'était pas
+positionné lors de la capture de référence du 2026-09-07** (seuls Stroke Rate/Count, Énergie,
+Fréquence cardiaque et Temps écoulé étaient présents) — donc Pellder pourrait rester vide en
+pratique sur ce rameur précis, malgré un parsing conforme à la spec FTMS. À vérifier lors d'une
+vraie séance avec un rameur connecté.
