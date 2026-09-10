@@ -10,6 +10,7 @@ import Seance from './pages/Seance'
 import Historique from './pages/Historique'
 import PlansProgression from './pages/PlansProgression'
 import PlanProgressionEditeur from './pages/PlanProgressionEditeur'
+import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
 
 function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil: () => void }) {
@@ -21,8 +22,9 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
             Pennac'h
           </Link>
           <nav>
-            <Link to="/progression">Progression</Link>
+            <Link to="/progression">Karned Heuliañ</Link>
             <Link to="/historique">Historique</Link>
+            <Link to="/test-bluetooth">Test Bluetooth</Link>
             <button onClick={changerProfil}>{profil.nom} ▾</button>
           </nav>
         </header>
@@ -34,6 +36,7 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
             <Route path="/historique" element={<Historique />} />
             <Route path="/progression" element={<PlansProgression />} />
             <Route path="/progression/:id" element={<PlanProgressionEditeur />} />
+            <Route path="/test-bluetooth" element={<TestBluetooth />} />
           </Routes>
         </main>
       </HashRouter>

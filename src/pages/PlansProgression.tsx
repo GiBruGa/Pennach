@@ -32,7 +32,7 @@ export default function PlansProgression() {
 
   return (
     <div className="ecran-plans-progression">
-      <h1>Plans de progression de {profil.nom}</h1>
+      <h1>Karned Heuliañ — {profil.nom}</h1>
       {!plans ? (
         <p>Chargement…</p>
       ) : plans.length === 0 ? (

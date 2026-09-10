@@ -203,6 +203,20 @@ main > * {
   color: var(--rouge);
 }
 
+.ecran-test-bluetooth {
+  text-align: center;
+}
+
+.ecran-test-bluetooth .consigne-test {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 12px 0;
+}
+
+.succes-message {
+  color: var(--vert);
+}
+
 .panneau-generateur {
   background: var(--bg-carte);
   border: 1px solid var(--border);

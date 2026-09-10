@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Fichiers source de design déposés à la racine (Illustrator, exports bruts) —
+# les fichiers réellement utilisés par l'appli vivent dans public/
+/*.svg
+/*.png
+/*.jpg
+/*.jpeg
+/*.ai
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
