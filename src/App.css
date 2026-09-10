@@ -64,7 +64,7 @@ main > * {
 }
 
 .logo-accueil {
-  width: min(60vw, 260px);
+  width: min(90vw, 520px);
 }
 
 .bouton-commencer {
