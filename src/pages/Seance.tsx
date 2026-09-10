@@ -8,7 +8,8 @@ import type { EtapeProgression, EvenementHistorique, PlanProgression, Programme 
 
 const COMPTE_A_REBOURS_MS = 10_000
 const STABILITE_NERZH_MS = 5_000
-const DECOMPTE_FINAL_MS = 15_000
+const DECOMPTE_FINAL_SEANCE_MS = 15_000
+const DECOMPTE_FINAL_SECTION_MS = 3_000
 
 function formatMMSS(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000))
@@ -78,6 +79,7 @@ export default function Seance() {
   const pauseDebutRef = useRef<number | null>(null)
   const sectionRef = useRef<Programme['sections'][number] | undefined>(undefined)
   const dernierBipSecondeRef = useRef<number | null>(null)
+  const dernierBipSectionSecondeRef = useRef<number | null>(null)
   const distanceMetresRef = useRef(0)
   const energieKcalRef = useRef(0)
   const segmentDebutDistanceRef = useRef(0)
@@ -249,7 +251,7 @@ export default function Seance() {
     : 0
 
   useEffect(() => {
-    if (phase !== 'en_cours' || tempsRestantSeance > DECOMPTE_FINAL_MS) return
+    if (phase !== 'en_cours' || tempsRestantSeance > DECOMPTE_FINAL_SEANCE_MS) return
     const seconde = Math.ceil(tempsRestantSeance / 1000)
     if (seconde > 0 && seconde !== dernierBipSecondeRef.current) {
       dernierBipSecondeRef.current = seconde
@@ -258,16 +260,43 @@ export default function Seance() {
   }, [phase, tempsRestantSeance])
 
   useEffect(() => {
+    // Bip sur les 3 dernières secondes de chaque section (sauf la dernière, qui n'a pas de fin
+    // programmée — cf. plus haut). Réinitialisé à chaque changement de section.
+    if (
+      phase !== 'en_cours' ||
+      !programme ||
+      sectionIndex + 1 >= programme.sections.length ||
+      tempsRestantSection > DECOMPTE_FINAL_SECTION_MS
+    ) {
+      return
+    }
+    const seconde = Math.ceil(tempsRestantSection / 1000)
+    if (seconde > 0 && seconde !== dernierBipSectionSecondeRef.current) {
+      dernierBipSectionSecondeRef.current = seconde
+      biper(550, 90)
+    }
+  }, [phase, programme, sectionIndex, tempsRestantSection])
+
+  useEffect(() => {
+    dernierBipSectionSecondeRef.current = null
+  }, [sectionIndex])
+
+  useEffect(() => {
     if (phase !== 'en_cours' || !sectionActuelle || sectionActuelle.tizh <= 0) return
     const intervalleMs = 60_000 / sectionActuelle.tizh
-    const doitBiper = programme?.signalSonoreTizh || tempsRestantSeance <= DECOMPTE_FINAL_MS
+    const doitBiper = programme?.signalSonoreTizh || tempsRestantSeance <= DECOMPTE_FINAL_SEANCE_MS
     const id = setInterval(() => {
       setClignote((c) => !c)
       if (doitBiper) biper(440, 60)
     }, intervalleMs)
     return () => clearInterval(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, sectionActuelle, programme?.signalSonoreTizh, tempsRestantSeance <= DECOMPTE_FINAL_MS])
+  }, [
+    phase,
+    sectionActuelle,
+    programme?.signalSonoreTizh,
+    tempsRestantSeance <= DECOMPTE_FINAL_SEANCE_MS,
+  ])
 
   function connecterSimule() {
     setConnecte(true)

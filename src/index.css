@@ -23,15 +23,11 @@
 body {
   margin: 0;
   min-height: 100svh;
-  /* Couleur/image/taille posées en JS (main.tsx) sur des propriétés longhand séparées,
-     pour laisser la position ci-dessous entièrement gouvernée par CSS. */
-  background-position: left center;
-}
-
-@media (orientation: landscape) {
-  body {
-    background-position: center center;
-  }
+  /* Couleur/image/taille posées en JS (main.tsx) sur des propriétés longhand séparées.
+     Centré dans les deux orientations : avec `cover`, ça donne naturellement "pleine hauteur,
+     centré sur le personnage" en portrait et "pleine largeur, centré verticalement" en paysage
+     (cf. maquette Pennac'h - Écrans.pdf, pages 1-2). */
+  background-position: center center;
 }
 
 button {
