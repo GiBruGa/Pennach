@@ -6,14 +6,23 @@ import Accueil from './pages/Accueil'
 import SelectionProfil from './pages/SelectionProfil'
 import Seance from './pages/Seance'
 import CarnetDeSuivi from './pages/CarnetDeSuivi'
+import FicheProfil from './pages/FicheProfil'
 import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
 
-function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil: () => void }) {
+function AppConnecte({
+  profil,
+  changerProfil,
+  majProfil,
+}: {
+  profil: Profil
+  changerProfil: () => void
+  majProfil: (profil: Profil) => void
+}) {
   const [menuOuvert, setMenuOuvert] = useState(false)
 
   return (
-    <ProfilProvider profil={profil} changerProfil={changerProfil}>
+    <ProfilProvider profil={profil} changerProfil={changerProfil} majProfil={majProfil}>
       <HashRouter>
         <header className="entete">
           <Link to="/" className="titre" onClick={() => setMenuOuvert(false)}>
@@ -28,6 +37,9 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
         </header>
         {menuOuvert ? (
           <div className="menu-avatar">
+            <Link to="/fiche" onClick={() => setMenuOuvert(false)}>
+              Fiche
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -45,6 +57,7 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
           <main>
             <Routes>
               <Route path="/" element={<CarnetDeSuivi />} />
+              <Route path="/fiche" element={<FicheProfil />} />
               <Route path="/seance/:planId/:etapeId" element={<Seance />} />
               <Route path="/test-bluetooth" element={<TestBluetooth />} />
             </Routes>
@@ -84,6 +97,7 @@ export default function App() {
   return (
     <AppConnecte
       profil={profil}
+      majProfil={setProfil}
       changerProfil={() => {
         oublierProfilActif()
         setProfil(null)
