@@ -266,6 +266,10 @@ main > * {
   flex-wrap: wrap;
 }
 
+.actions-panneau button:last-child {
+  flex-basis: 100%;
+}
+
 /* Écran de séance : pensé pour le mode paysage */
 .ecran-seance {
   display: flex;

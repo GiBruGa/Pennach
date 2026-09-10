@@ -91,19 +91,24 @@ export default function CarnetDeSuivi() {
 
   function ajouterEtape() {
     if (!carnet) return
-    const indexSelectionnee = etapeOuverteId
-      ? carnet.etapes.findIndex((e) => e.id === etapeOuverteId)
-      : -1
     const nouvelle = nouvelleEtape(0)
-    const etapes =
-      indexSelectionnee >= 0
-        ? [
-            ...carnet.etapes.slice(0, indexSelectionnee + 1),
-            nouvelle,
-            ...carnet.etapes.slice(indexSelectionnee + 1),
-          ]
-        : [...carnet.etapes, nouvelle]
+    sauvegarderCarnet(
+      [...carnet.etapes, nouvelle].map((e, i) => ({ ...e, numero: i + 1 })),
+    )
+  }
+
+  function ajouterApres(etapeId: string) {
+    if (!carnet) return
+    const index = carnet.etapes.findIndex((e) => e.id === etapeId)
+    if (index < 0) return
+    const nouvelle = nouvelleEtape(0)
+    const etapes = [
+      ...carnet.etapes.slice(0, index + 1),
+      nouvelle,
+      ...carnet.etapes.slice(index + 1),
+    ]
     sauvegarderCarnet(etapes.map((e, i) => ({ ...e, numero: i + 1 })))
+    fermer()
   }
 
   return (
@@ -111,7 +116,7 @@ export default function CarnetDeSuivi() {
       <h1>Karned Heuliañ — {profil.nom}</h1>
       <div className="barre-outils-carnet">
         <button type="button" onClick={ajouterEtape}>
-          {etapeOuverteId ? 'Ajouter après' : 'Ajouter une séance'}
+          Ajouter une séance
         </button>
       </div>
       <div className="table-carnet-conteneur">
@@ -199,6 +204,9 @@ export default function CarnetDeSuivi() {
                               </button>
                               <button type="button" onClick={sauvegarder}>
                                 Fermer (sauvegarder)
+                              </button>
+                              <button type="button" onClick={() => ajouterApres(brouillon.id)}>
+                                Ajouter après
                               </button>
                             </div>
                           </div>
@@ -303,6 +311,9 @@ export default function CarnetDeSuivi() {
                               </button>
                               <button type="button" onClick={sauvegarderEtLancer}>
                                 Lancer
+                              </button>
+                              <button type="button" onClick={() => ajouterApres(brouillon.id)}>
+                                Ajouter après
                               </button>
                             </div>
                           </div>
