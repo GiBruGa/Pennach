@@ -34,10 +34,28 @@
   color: var(--text);
 }
 
+.menu-avatar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 16px;
+}
+
+.menu-avatar button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-panneau);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+}
+
 main {
   flex: 1;
   padding: 16px;
-  max-width: min(1100px, 85vw);
   width: 100%;
   margin: 0;
 }
@@ -169,12 +187,20 @@ main > * {
   max-height: 70vh;
   overflow: auto;
   border-radius: 10px;
+  width: 100%;
 }
 
 .table-carnet {
   border-collapse: collapse;
   font-size: 0.85rem;
-  white-space: nowrap;
+  width: 100%;
+  table-layout: auto;
+}
+
+.table-carnet th,
+.table-carnet td {
+  white-space: normal;
+  word-break: break-word;
 }
 
 .table-carnet th,
@@ -224,6 +250,61 @@ main > * {
 
 .ligne-ouverte td {
   background: rgba(111, 178, 240, 0.08);
+}
+
+/* Sous ce seuil, un vrai tableau à 8 colonnes devient illisible : bascule en cartes
+   (une étape = un bloc, une ligne par grandeur avec son intitulé). */
+@media (max-width: 700px) {
+  .table-carnet,
+  .table-carnet tbody,
+  .table-carnet tr,
+  .table-carnet td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-carnet thead {
+    display: none;
+  }
+
+  .table-carnet tr.ligne-etape {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 4px 10px;
+  }
+
+  .table-carnet tr.ligne-etape td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: right;
+  }
+
+  .table-carnet tr.ligne-etape td:last-child {
+    border-bottom: none;
+  }
+
+  .table-carnet tr.ligne-etape td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    opacity: 0.6;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  .table-carnet tr.ligne-edition {
+    margin-bottom: 10px;
+  }
+
+  .table-carnet tr.ligne-edition td {
+    padding: 0;
+  }
 }
 
 .ligne-edition td {

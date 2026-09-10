@@ -183,17 +183,33 @@ tableau restent affichés (ce n'est pas la même règle que les glosses).
 feuille "Carnet de Suivi") ont été importées dans le carnet du profil GBG via SQL direct
 (phases d'origine repliées dans Arabat Disoñjal lors du retrait de la colonne Phase).
 
-## 12. Convention de mise en page (2026-09-10, largeur revue le 2026-09-11)
+## 12. Convention de mise en page — **révisée le 2026-09-11, règle "ne pas recouvrir le
+personnage" abandonnée**
 
-Le personnage du fond illustré (le rameur, `public/fond.jpg`) est centré dans l'image.
-**Tout panneau de contenu (menu, carte, formulaire...) doit être aligné à gauche de l'écran**
-(pas de `margin: 0 auto`), pour ne jamais recouvrir le personnage.
+Historique : la version initiale (2026-09-10) imposait un panneau de contenu étroit et aligné
+à gauche pour toujours laisser voir le rameur du fond. En usage réel sur téléphone, ça coupait
+le tableau du carnet (colonnes invisibles à droite, y compris le bouton **Lancer**) aussi bien
+en portrait qu'en paysage — confirmé par captures d'écran réelles. Décision : le contenu prime
+sur le fond décoratif.
 
-`main` a été élargi (`max-width: min(1100px, 85vw)`, était 420px) pour que le tableau du carnet
-tienne sans ascenseur horizontal sur un écran large — le fond (`main.tsx`) est positionné
-`left center` (au lieu de `center`) plutôt que centré, ce qui laisse le personnage visible sur
-la partie droite de l'écran même avec un panneau élargi. Sur mobile étroit, le tableau garde de
-toute façon son propre défilement horizontal borné (`table-carnet-conteneur`) si besoin.
+**Règle actuelle** :
+- `main` est en **pleine largeur** de l'écran (plus de `max-width` réduit), toujours calé à
+  gauche (`margin: 0`, pas de `margin: 0 auto`).
+- Le tableau du carnet (`table-carnet`) s'adapte par défaut à la largeur du panneau
+  (`width: 100%`, retour à la ligne du texte au lieu de `white-space: nowrap`) — le défilement
+  horizontal de `table-carnet-conteneur` reste en filet de sécurité, plus le mode normal
+  d'usage.
+- **Fond** (`public/fond.jpg`, positionné en CSS pur — `background-position` dans
+  `index.css`, pas en JS, pour rester pilotable par media query) :
+  - **portrait** : calé à gauche (`left center`)
+  - **paysage** : centré (`center center`), le fond couvrant alors naturellement toute la
+    largeur de l'écran
+- **Révéler le fond en entier** : cliquer sur l'avatar/prénom dans le bandeau (`{profil.nom} ▾`)
+  bascule un menu (`menu-avatar` dans `App.tsx`) qui **remplace** `<main>` — le contenu
+  disparaît complètement, laissant voir le fond en entier. Cliquer à nouveau (ou "Fermer")
+  restaure le contenu normal.
+- **Zoom** : viewport explicitement pincable (`maximum-scale=5, user-scalable=yes` dans
+  `index.html`) pour naviguer manuellement si besoin malgré la pleine largeur.
 
 ## 13. PWA installable
 

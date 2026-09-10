@@ -22,8 +22,16 @@
 
 body {
   margin: 0;
-  background: #0a1930;
   min-height: 100svh;
+  /* Couleur/image/taille posées en JS (main.tsx) sur des propriétés longhand séparées,
+     pour laisser la position ci-dessous entièrement gouvernée par CSS. */
+  background-position: left center;
+}
+
+@media (orientation: landscape) {
+  body {
+    background-position: center center;
+  }
 }
 
 button {

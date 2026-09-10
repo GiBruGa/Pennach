@@ -154,16 +154,24 @@ export default function CarnetDeSuivi() {
                     className={`ligne-etape${estProchaine ? ' ligne-prochaine' : ''}${estOuverte ? ' ligne-ouverte' : ''}`}
                     onClick={() => (estOuverte ? fermer() : ouvrir(etape))}
                   >
-                    <td className="cellule-numerique">
+                    <td className="cellule-numerique" data-label="N°">
                       {etape.numero}
                       {estProchaine && <span className="badge-prochaine">prochaine</span>}
                     </td>
-                    <td>{etape.typeSession}</td>
-                    <td className="cellule-numerique">{etape.parametres.puissance}</td>
-                    <td className="cellule-numerique">{etape.parametres.rythme}</td>
-                    <td className="cellule-numerique">{etape.parametres.recuperation}</td>
-                    <td className="cellule-numerique">{etape.parametres.dureeTotaleMinutes} min</td>
-                    <td className="cellule-resultat">
+                    <td data-label="Type">{etape.typeSession}</td>
+                    <td className="cellule-numerique" data-label="Nerzh">
+                      {etape.parametres.puissance}
+                    </td>
+                    <td className="cellule-numerique" data-label="Tizh">
+                      {etape.parametres.rythme}
+                    </td>
+                    <td className="cellule-numerique" data-label="Adnerzhañ">
+                      {etape.parametres.recuperation}
+                    </td>
+                    <td className="cellule-numerique" data-label="Padelezh">
+                      {etape.parametres.dureeTotaleMinutes} min
+                    </td>
+                    <td className="cellule-resultat" data-label="Résultat">
                       {realisee ? (
                         <>
                           Deiziad : {formatDeiziad(etape.dateRealisee)}
@@ -180,7 +188,9 @@ export default function CarnetDeSuivi() {
                         'à venir'
                       )}
                     </td>
-                    <td className="cellule-arabat">{etape.remarques || '—'}</td>
+                    <td className="cellule-arabat" data-label="Arabat Disoñjal">
+                      {etape.remarques || '—'}
+                    </td>
                   </tr>
                   {estOuverte && brouillon && (
                     <tr className="ligne-edition" ref={refOuverte}>

@@ -10,25 +10,46 @@ import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
 
 function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil: () => void }) {
+  const [menuOuvert, setMenuOuvert] = useState(false)
+
   return (
     <ProfilProvider profil={profil} changerProfil={changerProfil}>
       <HashRouter>
         <header className="entete">
-          <Link to="/" className="titre">
+          <Link to="/" className="titre" onClick={() => setMenuOuvert(false)}>
             Pennac'h
           </Link>
           <nav>
-            <Link to="/test-bluetooth">Test Bluetooth</Link>
-            <button onClick={changerProfil}>{profil.nom} ▾</button>
+            <Link to="/test-bluetooth" onClick={() => setMenuOuvert(false)}>
+              Test Bluetooth
+            </Link>
+            <button onClick={() => setMenuOuvert((v) => !v)}>{profil.nom} ▾</button>
           </nav>
         </header>
-        <main>
-          <Routes>
-            <Route path="/" element={<CarnetDeSuivi />} />
-            <Route path="/seance/:planId/:etapeId" element={<Seance />} />
-            <Route path="/test-bluetooth" element={<TestBluetooth />} />
-          </Routes>
-        </main>
+        {menuOuvert ? (
+          <div className="menu-avatar">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOuvert(false)
+                changerProfil()
+              }}
+            >
+              Changer de profil
+            </button>
+            <button type="button" onClick={() => setMenuOuvert(false)}>
+              Fermer
+            </button>
+          </div>
+        ) : (
+          <main>
+            <Routes>
+              <Route path="/" element={<CarnetDeSuivi />} />
+              <Route path="/seance/:planId/:etapeId" element={<Seance />} />
+              <Route path="/test-bluetooth" element={<TestBluetooth />} />
+            </Routes>
+          </main>
+        )}
       </HashRouter>
     </ProfilProvider>
   )
