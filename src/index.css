@@ -1,3 +1,9 @@
+@font-face {
+  font-family: 'Celtic MD';
+  src: url('/fonts/celticmd.ttf') format('truetype');
+  font-display: swap;
+}
+
 :root {
   /* Thème sombre nautique volontairement fixe (pas de bascule clair/sombre) :
      le fond photographique fixé sur toutes les pages n'a pas d'équivalent clair cohérent. */
@@ -9,8 +15,12 @@
   --accent: #6fb2f0;
   --rouge: #e0685f;
   --vert: #4cbf7a;
+  /* Aptos (police de la maquette) n'est pas libre de droits pour le web — Inter est
+     l'équivalent gratuit le plus proche visuellement, devenu un standard du web. */
+  --police-texte: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --police-titre: 'Celtic MD', var(--police-texte);
 
-  font: 16px/1.4 system-ui, 'Segoe UI', Roboto, sans-serif;
+  font: 16px/1.4 var(--police-texte);
   color-scheme: dark;
   color: var(--text);
   background: var(--bg);

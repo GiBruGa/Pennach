@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
 import { getOuCreerCarnet, savePlanProgression } from '../lib/storage'
@@ -33,8 +33,8 @@ export default function CarnetDeSuivi() {
   const [etapeOuverteId, setEtapeOuverteId] = useState<string | null>(null)
   const [brouillon, setBrouillon] = useState<EtapeProgression | null>(null)
 
-  const refProchaine = useRef<HTMLTableRowElement | null>(null)
-  const refOuverte = useRef<HTMLTableRowElement | null>(null)
+  const refProchaine = useRef<HTMLDivElement | null>(null)
+  const refOuverte = useRef<HTMLDivElement | null>(null)
   const dejaDefile = useRef(false)
 
   useEffect(() => {
@@ -43,14 +43,14 @@ export default function CarnetDeSuivi() {
 
   useEffect(() => {
     if (carnet && !dejaDefile.current && refProchaine.current) {
-      refProchaine.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      refProchaine.current.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
       dejaDefile.current = true
     }
   }, [carnet])
 
   useEffect(() => {
     if (etapeOuverteId && refOuverte.current) {
-      refOuverte.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      refOuverte.current.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
     }
   }, [etapeOuverteId])
 
@@ -122,241 +122,244 @@ export default function CarnetDeSuivi() {
 
   return (
     <div className="ecran-carnet-de-suivi">
-      <h1>Karned Heuliañ — {profil.nom}</h1>
+      <h1>
+        <span className="titre-karned">Karned Heuliañ</span> — {profil.nom}
+      </h1>
       <div className="barre-outils-carnet">
         <button type="button" onClick={ajouterEtape}>
           Ajouter une séance
         </button>
       </div>
-      <div className="table-carnet-conteneur">
-        <table className="table-carnet">
-          <thead>
-            <tr>
-              <th className="cellule-numerique">N°</th>
-              <th>Type</th>
-              <th className="cellule-numerique">Nerzh</th>
-              <th className="cellule-numerique">Tizh</th>
-              <th className="cellule-numerique">Adnerzhañ</th>
-              <th className="cellule-numerique">Padelezh</th>
-              <th>Résultat</th>
-              <th>Arabat Disoñjal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carnet.etapes.map((etape, i) => {
-              const estProchaine = i === indexProchaine
-              const estOuverte = etapeOuverteId === etape.id
-              const realisee = Boolean(etape.dateRealisee)
-              return (
-                <Fragment key={etape.id}>
-                  <tr
-                    ref={estProchaine ? refProchaine : undefined}
-                    className={`ligne-etape${estProchaine ? ' ligne-prochaine' : ''}${estOuverte ? ' ligne-ouverte' : ''}`}
-                    onClick={() => (estOuverte ? fermer() : ouvrir(etape))}
-                  >
-                    <td className="cellule-numerique" data-label="N°">
-                      {etape.numero}
-                      {estProchaine && <span className="badge-prochaine">prochaine</span>}
-                    </td>
-                    <td data-label="Type">{etape.typeSession}</td>
-                    <td className="cellule-numerique" data-label="Nerzh">
-                      {etape.parametres.puissance}
-                    </td>
-                    <td className="cellule-numerique" data-label="Tizh">
-                      {etape.parametres.rythme}
-                    </td>
-                    <td className="cellule-numerique" data-label="Adnerzhañ">
-                      {etape.parametres.recuperation}
-                    </td>
-                    <td className="cellule-numerique" data-label="Padelezh">
-                      {etape.parametres.dureeTotaleMinutes} min
-                    </td>
-                    <td className="cellule-resultat" data-label="Résultat">
-                      {realisee ? (
-                        <>
-                          Deiziad : {formatDeiziad(etape.dateRealisee)}
-                          <br />
-                          Amzervezh : {formatAmzervezh(etape.dureeReelleSecondes)}
-                          {etape.kmRealises !== undefined && (
-                            <>
-                              <br />
-                              Pellder : {etape.kmRealises} km
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        'à venir'
-                      )}
-                    </td>
-                    <td className="cellule-arabat" data-label="Arabat Disoñjal">
-                      {etape.remarques || '—'}
-                    </td>
-                  </tr>
-                  {estOuverte && brouillon && (
-                    <tr className="ligne-edition" ref={refOuverte}>
-                      <td colSpan={8}>
-                        {realisee ? (
-                          <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>
-                            <div className="resume-resultat">
-                              <div>Deiziad : {formatDeiziad(brouillon.dateRealisee)}</div>
-                              <div>Amzervezh : {formatAmzervezh(brouillon.dureeReelleSecondes)}</div>
-                              <div>
-                                Pellder : {brouillon.kmRealises !== undefined ? `${brouillon.kmRealises} km` : '—'}
-                              </div>
-                              <div>
-                                Energiezh :{' '}
-                                {brouillon.energieDepenseeKcal !== undefined
-                                  ? `${brouillon.energieDepenseeKcal} kcal`
-                                  : '—'}
-                              </div>
-                            </div>
-                            <label>
-                              Arabat Disoñjal
-                              <textarea
-                                value={brouillon.remarques ?? ''}
-                                onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
-                              />
-                            </label>
-                            <div className="groupe-actions">
-                              <div className="actions-panneau">
-                                <button type="button" onClick={supprimer}>
-                                  Supprimer
-                                </button>
-                                <button type="button" onClick={sauvegarder}>
-                                  Fermer (sauvegarder)
-                                </button>
-                              </div>
-                              <button
-                                type="button"
-                                className="bouton-ajouter-apres"
-                                onClick={() => ajouterApres(brouillon.id)}
-                              >
-                                Ajouter après
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>
-                            <div className="ligne-parametres">
-                              <label>
-                                Type de séance
-                                <select
-                                  value={brouillon.typeSession}
-                                  onChange={(e) => setBrouillon({ ...brouillon, typeSession: e.target.value })}
-                                >
-                                  {TYPES_SESSION.map((t) => (
-                                    <option key={t} value={t}>
-                                      {t}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                              <label className="champ-etale-3">
-                                Arabat Disoñjal
-                                <textarea
-                                  value={brouillon.remarques ?? ''}
-                                  onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
-                                />
-                              </label>
-                              <label>
-                                Nerzh (1-10)
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={10}
-                                  value={brouillon.parametres.puissance}
-                                  onChange={(e) =>
-                                    setBrouillon({
-                                      ...brouillon,
-                                      parametres: { ...brouillon.parametres, puissance: Number(e.target.value) },
-                                    })
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Tizh (Riw/min)
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={10}
-                                  value={brouillon.parametres.rythme}
-                                  onChange={(e) =>
-                                    setBrouillon({
-                                      ...brouillon,
-                                      parametres: { ...brouillon.parametres, rythme: Number(e.target.value) },
-                                    })
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Adnerzhañ (1-10)
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={10}
-                                  value={brouillon.parametres.recuperation}
-                                  onChange={(e) =>
-                                    setBrouillon({
-                                      ...brouillon,
-                                      parametres: {
-                                        ...brouillon.parametres,
-                                        recuperation: Number(e.target.value),
-                                      },
-                                    })
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Padelezh (min)
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={brouillon.parametres.dureeTotaleMinutes}
-                                  onChange={(e) =>
-                                    setBrouillon({
-                                      ...brouillon,
-                                      parametres: {
-                                        ...brouillon.parametres,
-                                        dureeTotaleMinutes: Number(e.target.value),
-                                      },
-                                    })
-                                  }
-                                />
-                              </label>
-                            </div>
-                            <div className="groupe-actions">
-                              <div className="actions-panneau">
-                                <button type="button" onClick={fermer}>
-                                  Sortir
-                                </button>
-                                <button type="button" onClick={supprimer}>
-                                  Supprimer
-                                </button>
-                                <button type="button" onClick={sauvegarder}>
-                                  Sauvegarder
-                                </button>
-                                <button type="button" onClick={sauvegarderEtLancer} className="bouton-lancer">
-                                  Lancer
-                                </button>
-                              </div>
-                              <button
-                                type="button"
-                                className="bouton-ajouter-apres"
-                                onClick={() => ajouterApres(brouillon.id)}
-                              >
-                                Ajouter après
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
+
+      <div className="liste-cartes-carnet">
+        {carnet.etapes.map((etape, i) => {
+          const estProchaine = i === indexProchaine
+          const estOuverte = etapeOuverteId === etape.id
+          const realisee = Boolean(etape.dateRealisee)
+          return (
+            <div
+              key={etape.id}
+              ref={(el) => {
+                if (estProchaine) refProchaine.current = el
+                if (estOuverte) refOuverte.current = el
+              }}
+              className={`carte-etape${estOuverte ? ' carte-ouverte' : ''}`}
+              onClick={() => (estOuverte ? undefined : ouvrir(etape))}
+            >
+              <div className="carte-etape-entete">
+                <span>
+                  N<sup>o</sup> {etape.numero}
+                </span>
+                <span>
+                  Type <strong>{etape.typeSession}</strong>
+                </span>
+              </div>
+              {estProchaine && <span className="badge-prochaine">Prochaine</span>}
+
+              <div className="carte-etape-grandeurs">
+                <div className="grandeur">
+                  <span className="grandeur-label">Nerzh</span>
+                  <span className="grandeur-valeur pastille-nerzh">{etape.parametres.puissance}</span>
+                </div>
+                <div className="grandeur">
+                  <span className="grandeur-label">Tizh</span>
+                  <span className="grandeur-valeur pastille-tizh">{etape.parametres.rythme}</span>
+                </div>
+                <div className="grandeur">
+                  <span className="grandeur-label">Adnerzhañ</span>
+                  <span className="grandeur-valeur pastille-adnerzhan">
+                    {etape.parametres.recuperation}
+                  </span>
+                </div>
+                <div className="grandeur">
+                  <span className="grandeur-label">Padelezh</span>
+                  <span className="grandeur-valeur pastille-padelezh">
+                    {etape.parametres.dureeTotaleMinutes}
+                  </span>
+                  <span className="grandeur-unite">min</span>
+                </div>
+              </div>
+
+              <p className="carte-etape-arabat">
+                Arabat Disoñjal : <strong>{etape.remarques || '—'}</strong>
+              </p>
+
+              <hr />
+
+              <p className="carte-etape-resultat">
+                Résultats :{' '}
+                {realisee ? (
+                  <>
+                    Deiziad {formatDeiziad(etape.dateRealisee)} · Amzervezh{' '}
+                    {formatAmzervezh(etape.dureeReelleSecondes)}
+                    {etape.kmRealises !== undefined && <> · Pellder {etape.kmRealises} km</>}
+                  </>
+                ) : (
+                  'à venir'
+                )}
+              </p>
+
+              {estOuverte && brouillon && (
+                <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>
+                  {realisee ? (
+                    <>
+                      <div className="resume-resultat">
+                        <div>Deiziad : {formatDeiziad(brouillon.dateRealisee)}</div>
+                        <div>Amzervezh : {formatAmzervezh(brouillon.dureeReelleSecondes)}</div>
+                        <div>
+                          Pellder : {brouillon.kmRealises !== undefined ? `${brouillon.kmRealises} km` : '—'}
+                        </div>
+                        <div>
+                          Energiezh :{' '}
+                          {brouillon.energieDepenseeKcal !== undefined
+                            ? `${brouillon.energieDepenseeKcal} kcal`
+                            : '—'}
+                        </div>
+                      </div>
+                      <label>
+                        Arabat Disoñjal
+                        <textarea
+                          value={brouillon.remarques ?? ''}
+                          onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
+                        />
+                      </label>
+                      <div className="groupe-actions">
+                        <div className="actions-panneau">
+                          <button type="button" onClick={supprimer}>
+                            Supprimer
+                          </button>
+                          <button type="button" onClick={sauvegarder}>
+                            Fermer (sauvegarder)
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="bouton-ajouter-apres"
+                          onClick={() => ajouterApres(brouillon.id)}
+                        >
+                          Ajouter après
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="ligne-parametres">
+                        <label>
+                          Type de séance
+                          <select
+                            value={brouillon.typeSession}
+                            onChange={(e) => setBrouillon({ ...brouillon, typeSession: e.target.value })}
+                          >
+                            {TYPES_SESSION.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="champ-etale-3">
+                          Arabat Disoñjal
+                          <textarea
+                            value={brouillon.remarques ?? ''}
+                            onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
+                          />
+                        </label>
+                        <label>
+                          Nerzh (1-10)
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={brouillon.parametres.puissance}
+                            onChange={(e) =>
+                              setBrouillon({
+                                ...brouillon,
+                                parametres: { ...brouillon.parametres, puissance: Number(e.target.value) },
+                              })
+                            }
+                          />
+                        </label>
+                        <label>
+                          Tizh (Riw/min)
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={brouillon.parametres.rythme}
+                            onChange={(e) =>
+                              setBrouillon({
+                                ...brouillon,
+                                parametres: { ...brouillon.parametres, rythme: Number(e.target.value) },
+                              })
+                            }
+                          />
+                        </label>
+                        <label>
+                          Adnerzhañ (1-10)
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={brouillon.parametres.recuperation}
+                            onChange={(e) =>
+                              setBrouillon({
+                                ...brouillon,
+                                parametres: {
+                                  ...brouillon.parametres,
+                                  recuperation: Number(e.target.value),
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                        <label>
+                          Padelezh (min)
+                          <input
+                            type="number"
+                            min={1}
+                            value={brouillon.parametres.dureeTotaleMinutes}
+                            onChange={(e) =>
+                              setBrouillon({
+                                ...brouillon,
+                                parametres: {
+                                  ...brouillon.parametres,
+                                  dureeTotaleMinutes: Number(e.target.value),
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="groupe-actions">
+                        <div className="actions-panneau">
+                          <button type="button" onClick={fermer}>
+                            Sortir
+                          </button>
+                          <button type="button" onClick={supprimer}>
+                            Supprimer
+                          </button>
+                          <button type="button" onClick={sauvegarder}>
+                            Sauvegarder
+                          </button>
+                          <button type="button" onClick={sauvegarderEtLancer} className="bouton-lancer">
+                            Lancer
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="bouton-ajouter-apres"
+                          onClick={() => ajouterApres(brouillon.id)}
+                        >
+                          Ajouter après
+                        </button>
+                      </div>
+                    </>
                   )}
-                </Fragment>
-              )
-            })}
-          </tbody>
-        </table>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

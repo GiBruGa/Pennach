@@ -15,10 +15,15 @@
 }
 
 .entete .titre {
+  font-family: var(--police-titre);
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: var(--text);
   text-decoration: none;
+}
+
+.titre-karned {
+  font-family: var(--police-titre);
 }
 
 .entete nav {
@@ -168,143 +173,147 @@ main > * {
 }
 
 .badge-prochaine {
-  margin-left: 6px;
+  display: inline-block;
+  margin: 4px 0;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--accent);
   border: 1px solid var(--accent);
   border-radius: 999px;
-  padding: 1px 6px;
-  vertical-align: middle;
+  padding: 2px 8px;
 }
 
 .barre-outils-carnet {
   margin-bottom: 10px;
 }
 
-.table-carnet-conteneur {
-  max-height: 70vh;
-  overflow: auto;
-  border-radius: 10px;
-  width: 100%;
-}
-
-.table-carnet {
-  border-collapse: collapse;
-  font-size: 0.85rem;
-  width: 100%;
-  table-layout: auto;
-}
-
-.table-carnet th,
-.table-carnet td {
-  white-space: normal;
-  word-break: break-word;
-}
-
-.table-carnet th,
-.table-carnet td {
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-
-/* Règle générale : toute cellule contenant une valeur numérique est centrée, quel que soit le tableau. */
+/* Règle générale : toute cellule/valeur numérique reste centrée, où qu'elle apparaisse. */
 .cellule-numerique {
   text-align: center;
 }
 
-.table-carnet th {
-  position: sticky;
-  top: 0;
-  background: var(--bg-carte);
-  text-align: left;
+/* Carnet de suivi : une carte par étape, empilées verticalement en portrait (défilement
+   vertical) et côte à côte en paysage (défilement horizontal) — cf. maquette Pennac'h -
+   Écrans.pdf, pages 3-4. */
+.liste-cartes-carnet {
+  display: flex;
+  gap: 14px;
+  max-height: 75vh;
+  overflow-y: auto;
 }
 
-.table-carnet tr.ligne-prochaine td {
-  background: rgba(111, 178, 240, 0.12);
+@media (orientation: portrait) {
+  .liste-cartes-carnet {
+    flex-direction: column;
+  }
 }
 
-.table-carnet .cellule-resultat {
-  white-space: normal;
-  min-width: 160px;
-  font-size: 0.8rem;
+@media (orientation: landscape) {
+  .liste-cartes-carnet {
+    flex-direction: row;
+    overflow-x: auto;
+    align-items: flex-start;
+  }
+
+  .carte-etape {
+    flex: 0 0 280px;
+  }
 }
 
-.table-carnet .cellule-arabat {
-  white-space: normal;
-  min-width: 160px;
-  max-width: 260px;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-.ligne-etape {
+.carte-etape {
   cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.ligne-etape:hover td {
-  background: rgba(255, 255, 255, 0.04);
+.carte-etape:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.ligne-ouverte td {
-  background: rgba(111, 178, 240, 0.08);
+.carte-etape.carte-ouverte {
+  cursor: default;
+  border-color: var(--accent);
 }
 
-/* Sous ce seuil, un vrai tableau à 8 colonnes devient illisible : bascule en cartes
-   (une étape = un bloc, une ligne par grandeur avec son intitulé). */
-@media (max-width: 700px) {
-  .table-carnet,
-  .table-carnet tbody,
-  .table-carnet tr,
-  .table-carnet td {
-    display: block;
-    width: 100%;
-  }
+.carte-etape-entete {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.95rem;
+}
 
-  .table-carnet thead {
-    display: none;
-  }
+.carte-etape-grandeurs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+  margin: 10px 0;
+}
 
-  .table-carnet tr.ligne-etape {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    padding: 4px 10px;
-  }
+.grandeur {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  .table-carnet tr.ligne-etape td {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    text-align: right;
-  }
+.grandeur-label {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  min-width: 5.5em;
+}
 
-  .table-carnet tr.ligne-etape td:last-child {
-    border-bottom: none;
-  }
+.grandeur-valeur {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
 
-  .table-carnet tr.ligne-etape td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    opacity: 0.6;
-    text-align: left;
-    flex-shrink: 0;
-  }
+.grandeur-unite {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
 
-  .table-carnet tr.ligne-edition {
-    margin-bottom: 10px;
-  }
+.pastille-nerzh {
+  background: #e8b4bc;
+  color: #5a1f27;
+}
 
-  .table-carnet tr.ligne-edition td {
-    padding: 0;
-  }
+.pastille-tizh {
+  background: #c3cbf0;
+  color: #26306b;
+}
+
+.pastille-adnerzhan {
+  background: #bfe3c8;
+  color: #1f4a2c;
+}
+
+.pastille-padelezh {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+.carte-etape-arabat {
+  font-size: 0.85rem;
+  margin: 6px 0;
+}
+
+.carte-etape hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+
+.carte-etape-resultat {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin: 0;
 }
 
 .ligne-edition td {
