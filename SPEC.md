@@ -137,19 +137,31 @@ classeur Excel de référence, sans la colonne "Phase" (supprimée le 2026-09-11
 pour les étapes déjà présentes, a été basculé dans Arabat Disoñjal) :
 - **Type de séance** : un seul type existe pour l'instant, **Reiñ Bec'h** (HIIT — "mouiller le
   maillot"). D'autres types pourront s'ajouter à `TYPES_SESSION` dans `CarnetDeSuivi.tsx`.
-- **Nerzh / Tizh / Récup / Amzer** : les mêmes 4 critères qu'en §10 (Puissance/Rythme/
-  Récupération/Durée), continuent à piloter `genererSections()` (courbe EvolTemps) — le
-  renommage en vocabulaire Tizh/Nerzh/Amzer est un habillage d'affichage, pas un changement du
-  moteur de génération.
+- **Nerzh / Tizh / Adnerzhañ / Padelezh** : les mêmes 4 critères qu'en §10 (Puissance/Rythme/
+  Récupération/Durée cible), continuent à piloter `genererSections()` (courbe EvolTemps) — le
+  renommage en vocabulaire breton est un habillage d'affichage, pas un changement du moteur de
+  génération. **Attention à la terminologie (fixée le 2026-09-11, a changé une première fois)** :
+  - **Padelezh** = la durée *cible/planifiée* (persiste, comme un jour — ex: 45 min prévues)
+  - **Amzervezh** = la durée *réelle* remontée automatiquement du rameur à la fin d'une séance
+    (la durée de l'événement lui-même) — **ne pas confondre avec Padelezh**
+  - **Adnerzhañ** = le critère Récupération (1-10)
 - **Résultat**, renseigné **automatiquement** à la fin de la séance liée (voir §13) : Deiziad
-  (date), Padelezh (durée réelle), Pellder (distance), Energiezh (énergie).
+  (date), Amzervezh (durée réelle), Pellder (distance), Energiezh (énergie) — affichés avec un
+  retour à la ligne entre chaque valeur, y compris dans la colonne compacte du tableau.
 - **Arabat Disoñjal** (« à retenir ») : remarque libre, **par étape** (pas un commentaire
-  global), seul champ modifiable par l'utilisateur une fois la séance réalisée.
+  global) — visible comme colonne à part entière du tableau, modifiable à tout moment (avant ou
+  après la séance).
+
+**Vocabulaire dans les champs éditables (2026-09-11)** : comme il y a désormais beaucoup de
+termes bretons, les *champs de saisie* du panneau d'édition (pas les en-têtes de colonnes du
+tableau) portent leur unité ou leur échelle entre parenthèses — jamais une traduction du mot
+lui-même : `Nerzh (1-10)`, `Tizh (Riw/min)`, `Adnerzhañ (1-10)`, `Padelezh (min)`.
 
 **Interaction** : la liste est un tableau compact façon Excel (`table-carnet`, une ligne =
 une étape). Cliquer une ligne l'ouvre en édition (une seule à la fois) :
-- étape **à venir** : Type + les 4 critères sont modifiables ; actions *Sortir* (annule),
-  *Supprimer*, *Sauvegarder*, *Lancer* (sauvegarde puis bascule sur l'écran de séance).
+- étape **à venir** : Type + les 4 critères + Arabat Disoñjal sont modifiables ; actions
+  *Sortir* (annule), *Supprimer*, *Sauvegarder*, *Lancer* (sauvegarde puis bascule sur l'écran
+  de séance).
 - étape **réalisée** : seul Arabat Disoñjal est modifiable ; actions *Supprimer*, *Fermer
   (sauvegarde)*.
 
@@ -171,12 +183,17 @@ tableau restent affichés (ce n'est pas la même règle que les glosses).
 feuille "Carnet de Suivi") ont été importées dans le carnet du profil GBG via SQL direct
 (phases d'origine repliées dans Arabat Disoñjal lors du retrait de la colonne Phase).
 
-## 12. Convention de mise en page (2026-09-10)
+## 12. Convention de mise en page (2026-09-10, largeur revue le 2026-09-11)
 
 Le personnage du fond illustré (le rameur, `public/fond.jpg`) est centré dans l'image.
-**Tout panneau de contenu (menu, carte, formulaire...) doit être aligné à gauche de l'écran et
-de largeur limitée (`max-width` réduit, pas de `margin: 0 auto`)**, pour ne jamais recouvrir le
-personnage — ni maintenant ni sur un écran ajouté plus tard. Voir `main` dans `src/App.css`.
+**Tout panneau de contenu (menu, carte, formulaire...) doit être aligné à gauche de l'écran**
+(pas de `margin: 0 auto`), pour ne jamais recouvrir le personnage.
+
+`main` a été élargi (`max-width: min(1100px, 85vw)`, était 420px) pour que le tableau du carnet
+tienne sans ascenseur horizontal sur un écran large — le fond (`main.tsx`) est positionné
+`left center` (au lieu de `center`) plutôt que centré, ce qui laisse le personnage visible sur
+la partie droite de l'écran même avec un panneau élargi. Sur mobile étroit, le tableau garde de
+toute façon son propre défilement horizontal borné (`table-carnet-conteneur`) si besoin.
 
 ## 13. PWA installable
 

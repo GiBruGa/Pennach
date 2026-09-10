@@ -37,7 +37,7 @@
 main {
   flex: 1;
   padding: 16px;
-  max-width: 420px;
+  max-width: min(1100px, 85vw);
   width: 100%;
   margin: 0;
 }
@@ -87,6 +87,11 @@ main > * {
 .ecran-selection-profil {
   text-align: center;
   padding-top: 15vh;
+}
+
+.logo-selection-profil {
+  width: min(50vw, 220px);
+  margin-bottom: 8px;
 }
 
 .liste-profils {
@@ -194,6 +199,14 @@ main > * {
   white-space: normal;
   min-width: 160px;
   font-size: 0.8rem;
+}
+
+.table-carnet .cellule-arabat {
+  white-space: normal;
+  min-width: 160px;
+  max-width: 260px;
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
 .ligne-etape {

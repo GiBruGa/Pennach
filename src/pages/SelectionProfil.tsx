@@ -32,7 +32,11 @@ export default function SelectionProfil({ onSelected }: { onSelected: (profil: P
 
   return (
     <div className="ecran-selection-profil">
-      <h1>Pennac'h</h1>
+      <img
+        src={`${import.meta.env.BASE_URL}logo-noir.svg`}
+        alt="Pennac'h"
+        className="logo-selection-profil"
+      />
       <p>Qui rame ?</p>
       {erreur && <p className="erreur">{erreur}</p>}
       {chargement ? (

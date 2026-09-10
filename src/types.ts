@@ -60,10 +60,10 @@ export interface EtapeProgression {
   typeSession: string // ex: "Reiñ Bec'h" (HIIT) — seul type existant pour l'instant
   parametres: ParametresGeneration
   // Renseigné automatiquement à la fin de la séance liée (voir seanceId) :
-  // Deiziad (date), Padelezh (durée réelle), Pellder (distance), Energiezh (énergie)
+  // Deiziad (date), Amzervezh (durée réelle), Pellder (distance), Energiezh (énergie)
   seanceId?: string
   dateRealisee?: number // timestamp ms — Deiziad
-  dureeReelleSecondes?: number // Padelezh
+  dureeReelleSecondes?: number // Amzervezh
   kmRealises?: number // Pellder
   energieDepenseeKcal?: number // Energiezh
   // Renseigné par l'utilisateur :

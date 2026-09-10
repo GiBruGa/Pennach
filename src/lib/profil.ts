@@ -8,7 +8,11 @@ export interface Profil {
 const CLE_PROFIL_ACTIF = 'pennach_profil_actif_id'
 
 export async function listerProfils(): Promise<Profil[]> {
-  const { data, error } = await supabase.from('profils').select('id, nom').order('nom')
+  const { data, error } = await supabase
+    .from('profils')
+    .select('id, nom')
+    .order('ordre', { ascending: true, nullsFirst: false })
+    .order('nom')
   if (error) throw error
   return data
 }
@@ -20,7 +24,18 @@ export async function getProfil(id: string): Promise<Profil | null> {
 }
 
 export async function creerProfil(nom: string): Promise<Profil> {
-  const { data, error } = await supabase.from('profils').insert({ nom }).select('id, nom').single()
+  const { data: max } = await supabase
+    .from('profils')
+    .select('ordre')
+    .order('ordre', { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle()
+  const ordre = (max?.ordre ?? 0) + 1
+  const { data, error } = await supabase
+    .from('profils')
+    .insert({ nom, ordre })
+    .select('id, nom')
+    .single()
   if (error) throw error
   return data
 }

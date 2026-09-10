@@ -19,7 +19,7 @@ function formatDeiziad(ts?: number): string {
   return ts ? new Date(ts).toLocaleDateString('fr-FR') : '—'
 }
 
-function formatPadelezh(secondes?: number): string {
+function formatAmzervezh(secondes?: number): string {
   if (!secondes) return '—'
   const min = Math.floor(secondes / 60)
   const sec = secondes % 60
@@ -122,9 +122,10 @@ export default function CarnetDeSuivi() {
               <th>Type</th>
               <th>Nerzh</th>
               <th>Tizh</th>
-              <th>Récup</th>
-              <th>Amzer</th>
+              <th>Adnerzhañ</th>
+              <th>Padelezh</th>
               <th>Résultat</th>
+              <th>Arabat Disoñjal</th>
             </tr>
           </thead>
           <tbody>
@@ -151,23 +152,30 @@ export default function CarnetDeSuivi() {
                     <td className="cellule-resultat">
                       {realisee ? (
                         <>
-                          Deiziad : {formatDeiziad(etape.dateRealisee)} · Padelezh :{' '}
-                          {formatPadelezh(etape.dureeReelleSecondes)}
-                          {etape.kmRealises !== undefined && ` · Pellder : ${etape.kmRealises} km`}
+                          Deiziad : {formatDeiziad(etape.dateRealisee)}
+                          <br />
+                          Amzervezh : {formatAmzervezh(etape.dureeReelleSecondes)}
+                          {etape.kmRealises !== undefined && (
+                            <>
+                              <br />
+                              Pellder : {etape.kmRealises} km
+                            </>
+                          )}
                         </>
                       ) : (
                         'à venir'
                       )}
                     </td>
+                    <td className="cellule-arabat">{etape.remarques || '—'}</td>
                   </tr>
                   {estOuverte && brouillon && (
                     <tr className="ligne-edition">
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         {realisee ? (
                           <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>
                             <div className="resume-resultat">
                               <div>Deiziad : {formatDeiziad(brouillon.dateRealisee)}</div>
-                              <div>Padelezh : {formatPadelezh(brouillon.dureeReelleSecondes)}</div>
+                              <div>Amzervezh : {formatAmzervezh(brouillon.dureeReelleSecondes)}</div>
                               <div>
                                 Pellder : {brouillon.kmRealises !== undefined ? `${brouillon.kmRealises} km` : '—'}
                               </div>
@@ -211,7 +219,7 @@ export default function CarnetDeSuivi() {
                             </label>
                             <div className="ligne-parametres">
                               <label>
-                                Puissance (1-10)
+                                Nerzh (1-10)
                                 <input
                                   type="number"
                                   min={1}
@@ -226,7 +234,7 @@ export default function CarnetDeSuivi() {
                                 />
                               </label>
                               <label>
-                                Rythme (1-10)
+                                Tizh (Riw/min)
                                 <input
                                   type="number"
                                   min={1}
@@ -241,7 +249,7 @@ export default function CarnetDeSuivi() {
                                 />
                               </label>
                               <label>
-                                Récupération (1-10)
+                                Adnerzhañ (1-10)
                                 <input
                                   type="number"
                                   min={1}
@@ -259,7 +267,7 @@ export default function CarnetDeSuivi() {
                                 />
                               </label>
                               <label>
-                                Durée (min)
+                                Padelezh (min)
                                 <input
                                   type="number"
                                   min={1}
