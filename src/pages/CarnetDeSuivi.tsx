@@ -34,6 +34,7 @@ export default function CarnetDeSuivi() {
   const [brouillon, setBrouillon] = useState<EtapeProgression | null>(null)
 
   const refProchaine = useRef<HTMLTableRowElement | null>(null)
+  const refOuverte = useRef<HTMLTableRowElement | null>(null)
   const dejaDefile = useRef(false)
 
   useEffect(() => {
@@ -46,6 +47,12 @@ export default function CarnetDeSuivi() {
       dejaDefile.current = true
     }
   }, [carnet])
+
+  useEffect(() => {
+    if (etapeOuverteId && refOuverte.current) {
+      refOuverte.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [etapeOuverteId])
 
   if (!carnet) return <p>Chargement…</p>
 
@@ -97,7 +104,7 @@ export default function CarnetDeSuivi() {
     )
   }
 
-  function ajouterApres(etapeId: string) {
+  async function ajouterApres(etapeId: string) {
     if (!carnet) return
     const index = carnet.etapes.findIndex((e) => e.id === etapeId)
     if (index < 0) return
@@ -106,9 +113,10 @@ export default function CarnetDeSuivi() {
       ...carnet.etapes.slice(0, index + 1),
       nouvelle,
       ...carnet.etapes.slice(index + 1),
-    ]
-    sauvegarderCarnet(etapes.map((e, i) => ({ ...e, numero: i + 1 })))
-    fermer()
+    ].map((e, i) => ({ ...e, numero: i + 1 }))
+    await sauvegarderCarnet(etapes)
+    const ajoutee = etapes.find((e) => e.id === nouvelle.id)
+    if (ajoutee) ouvrir(ajoutee)
   }
 
   return (
@@ -174,7 +182,7 @@ export default function CarnetDeSuivi() {
                     <td className="cellule-arabat">{etape.remarques || '—'}</td>
                   </tr>
                   {estOuverte && brouillon && (
-                    <tr className="ligne-edition">
+                    <tr className="ligne-edition" ref={refOuverte}>
                       <td colSpan={8}>
                         {realisee ? (
                           <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>

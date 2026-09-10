@@ -40,6 +40,13 @@ function programmeDepuisEtape(plan: PlanProgression, etape: EtapeProgression): P
 
 type Phase = 'avant' | 'compte_a_rebours' | 'en_cours' | 'pause' | 'fini'
 
+interface StatsSection {
+  nerzh: number
+  tizhMoyen: number
+  pellderKm: number
+  energiezhKcal: number
+}
+
 export default function Seance() {
   const { profil } = useProfil()
   const { planId, etapeId } = useParams()
@@ -57,6 +64,9 @@ export default function Seance() {
   const [sectionIndex, setSectionIndex] = useState(0)
   const [clignote, setClignote] = useState(false)
   const [maintenant, setMaintenant] = useState(() => Date.now())
+  const [distanceKm, setDistanceKm] = useState(0)
+  const [energieKcal, setEnergieKcal] = useState(0)
+  const [sectionPrecedente, setSectionPrecedente] = useState<StatsSection | null>(null)
 
   const ble = useRef(new RowerConnection())
   const debutCompteARebours = useRef(0)
@@ -70,6 +80,18 @@ export default function Seance() {
   const dernierBipSecondeRef = useRef<number | null>(null)
   const distanceMetresRef = useRef(0)
   const energieKcalRef = useRef(0)
+  const segmentDebutDistanceRef = useRef(0)
+  const segmentDebutEnergieRef = useRef(0)
+  const tizhSommeRef = useRef(0)
+  const tizhCompteRef = useRef(0)
+
+  function demarrerNouveauSegment(nerzh: number, debut: number) {
+    segmentRef.current = { debut, nerzh }
+    tizhSommeRef.current = 0
+    tizhCompteRef.current = 0
+    segmentDebutDistanceRef.current = distanceMetresRef.current
+    segmentDebutEnergieRef.current = energieKcalRef.current
+  }
 
   useEffect(() => {
     if (!planId || !etapeId) return
@@ -96,13 +118,19 @@ export default function Seance() {
   const clorreSegment = useCallback((fin: number, planNerzh: number, planTizh: number) => {
     const segment = segmentRef.current
     if (!segment || fin <= segment.debut) return
+    const tizhMoyen =
+      tizhCompteRef.current > 0 ? Math.round(tizhSommeRef.current / tizhCompteRef.current) : 0
+    const pellderKm = Math.max(0, distanceMetresRef.current - segmentDebutDistanceRef.current) / 1000
+    const energiezhKcal = Math.max(0, energieKcalRef.current - segmentDebutEnergieRef.current)
     evenementsRef.current.push({
       type: segment.nerzh === planNerzh ? 'section_planifiee' : 'section_personnalisee',
       debut: segment.debut,
       fin,
       nerzh: segment.nerzh,
       tizhPrevu: planTizh,
+      tizhReelMoyen: tizhMoyen,
     })
+    setSectionPrecedente({ nerzh: segment.nerzh, tizhMoyen, pellderKm, energiezhKcal })
   }, [])
 
   const passerSectionSuivante = useCallback(
@@ -110,12 +138,12 @@ export default function Seance() {
       const section = sectionRef.current
       if (!programme || !section) return
       clorreSegment(maintenant, section.nerzh, section.tizh)
-      segmentRef.current = null
       candidatRef.current = null
       if (sectionIndex + 1 < programme.sections.length) {
         setSectionIndex((i) => i + 1)
         debutSectionRef.current = maintenant
         const suivante = programme.sections[sectionIndex + 1]
+        demarrerNouveauSegment(suivante.nerzh, maintenant)
         ble.current.definirNerzh(suivante.nerzh).catch(() => {})
       } else {
         terminer('terminee', maintenant)
@@ -188,19 +216,28 @@ export default function Seance() {
       setSectionIndex(0)
       setPhase('en_cours')
       const premiere = programme?.sections[0]
-      if (premiere) ble.current.definirNerzh(premiere.nerzh).catch(() => {})
+      if (premiere) {
+        demarrerNouveauSegment(premiere.nerzh, debut)
+        ble.current.definirNerzh(premiere.nerzh).catch(() => {})
+      }
     }
   }, [phase, maintenant, programme])
 
   useEffect(() => {
     if (phase !== 'en_cours' || !programme || !sectionActuelle) return
-    if (maintenant - debutSectionRef.current >= sectionActuelle.dureeSecondes * 1000) {
+    // La dernière section n'a pas de fin automatique : elle continue d'enregistrer
+    // jusqu'à l'arrêt manuel de la séance.
+    const estDerniereSection = sectionIndex + 1 >= programme.sections.length
+    if (
+      !estDerniereSection &&
+      maintenant - debutSectionRef.current >= sectionActuelle.dureeSecondes * 1000
+    ) {
       passerSectionSuivante(maintenant)
     }
     const candidat = candidatRef.current
     if (candidat && maintenant - candidat.depuis >= STABILITE_NERZH_MS) {
       clorreSegment(maintenant, sectionActuelle.nerzh, sectionActuelle.tizh)
-      segmentRef.current = { debut: maintenant, nerzh: candidat.valeur }
+      demarrerNouveauSegment(candidat.valeur, maintenant)
       candidatRef.current = null
     }
   }, [phase, maintenant, programme, sectionActuelle, passerSectionSuivante, clorreSegment])
@@ -232,6 +269,21 @@ export default function Seance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, sectionActuelle, programme?.signalSonoreTizh, tempsRestantSeance <= DECOMPTE_FINAL_MS])
 
+  function connecterSimule() {
+    setConnecte(true)
+    setInterval(() => {
+      const cible = sectionRef.current?.tizh ?? 20
+      const tizh = Math.max(0, cible + Math.round((Math.random() - 0.5) * 10))
+      setTizhReel(tizh)
+      tizhSommeRef.current += tizh
+      tizhCompteRef.current += 1
+      distanceMetresRef.current += 3
+      setDistanceKm(distanceMetresRef.current / 1000)
+      energieKcalRef.current += 1
+      setEnergieKcal(energieKcalRef.current)
+    }, 1000)
+  }
+
   async function connecter() {
     setErreur(null)
     try {
@@ -240,15 +292,23 @@ export default function Seance() {
       await conn.prendreLeControle()
       await conn.subscribeRowerData((data) => {
         setTizhReel(data.tizh)
-        if (data.distanceMetres !== undefined) distanceMetresRef.current = data.distanceMetres
-        if (data.totalEnergyKcal !== undefined) energieKcalRef.current = data.totalEnergyKcal
+        tizhSommeRef.current += data.tizh
+        tizhCompteRef.current += 1
+        if (data.distanceMetres !== undefined) {
+          distanceMetresRef.current = data.distanceMetres
+          setDistanceKm(data.distanceMetres / 1000)
+        }
+        if (data.totalEnergyKcal !== undefined) {
+          energieKcalRef.current = data.totalEnergyKcal
+          setEnergieKcal(data.totalEnergyKcal)
+        }
       })
       await conn.subscribeStatus((event) => {
         if (event.nerzh === undefined) return
         setNerzhReel(event.nerzh)
         const now = Date.now()
         if (!segmentRef.current) {
-          segmentRef.current = { debut: now, nerzh: event.nerzh }
+          demarrerNouveauSegment(event.nerzh, now)
           return
         }
         if (event.nerzh === segmentRef.current.nerzh) {
@@ -310,7 +370,10 @@ export default function Seance() {
         <h1>{programme.nom}</h1>
         {erreur && <p className="erreur">{erreur}</p>}
         {!connecte ? (
-          <button onClick={connecter}>Connecter le rameur</button>
+          <>
+            <button onClick={connecter}>Connecter le rameur</button>
+            <button onClick={connecterSimule}>Simuler (démo)</button>
+          </>
         ) : (
           <button onClick={demarrer}>Démarrer</button>
         )}
@@ -331,26 +394,65 @@ export default function Seance() {
 
   return (
     <div className="ecran-seance ecran-seance-en-cours">
-      <div className={`cercle-tizh cercle-${phase === 'pause' ? 'bleu' : couleurCercle} ${clignote ? 'clignote' : ''}`}>
-        <span className="nerzh-valeur">{nerzhReel ?? sectionActuelle?.nerzh}</span>
-      </div>
-      <div className="chronos">
-        <div>Section : {formatMMSS(Math.max(0, tempsRestantSection))}</div>
-        <div>Séance : {formatMMSS(Math.max(0, tempsRestantSeance))}</div>
-      </div>
-      {sectionActuelle?.zoneKalon && (
-        <p className="zone-kalon">
-          Kalon visé : {sectionActuelle.zoneKalon.min}-{sectionActuelle.zoneKalon.max} bpm
-          {sectionActuelle.zoneKalon.libelle && ` (${sectionActuelle.zoneKalon.libelle})`}
-        </p>
-      )}
-      {sectionActuelle && <p className="explication">{sectionActuelle.explication}</p>}
-      {sectionSuivante && (
-        <div className="apercu-section-suivante">
-          <strong>Suivant :</strong> {sectionSuivante.dureeSecondes}s · Nerzh {sectionSuivante.nerzh} ·
-          Tizh {sectionSuivante.tizh} · {sectionSuivante.explication}
+      <div className="disposition-seance-live">
+        <div className="zone-circulaire">
+          <div
+            className={`cercle-tizh cercle-${phase === 'pause' ? 'bleu' : couleurCercle} ${clignote ? 'clignote' : ''}`}
+          >
+            <span className="tizh-valeur">{sectionActuelle?.tizh}</span>
+          </div>
+          <div className="chrono-seance">Séance : {formatMMSS(Math.max(0, tempsRestantSeance))}</div>
         </div>
-      )}
+
+        <div className="panneau-sections">
+          {sectionPrecedente && (
+            <div className="ligne-section ligne-section-precedente">
+              <strong>Section précédente</strong>
+              <div>
+                Nerzh {sectionPrecedente.nerzh} · Tizh moyen {sectionPrecedente.tizhMoyen} Riw/min
+              </div>
+              <div>
+                Pellder {sectionPrecedente.pellderKm.toFixed(2)} km · Energiezh{' '}
+                {sectionPrecedente.energiezhKcal} kcal
+              </div>
+            </div>
+          )}
+
+          <div className="ligne-section ligne-section-courante">
+            <strong>En cours</strong>
+            <div className="nerzh-gros">Nerzh {nerzhReel ?? sectionActuelle?.nerzh}</div>
+            <div>
+              Pellder {distanceKm.toFixed(2)} km · Energiezh {energieKcal} kcal
+            </div>
+            <div className="amzervezh-gros">Amzervezh {formatMMSS(Math.max(0, tempsRestantSection))}</div>
+            {sectionActuelle?.zoneKalon && (
+              <div>
+                Kalon {sectionActuelle.zoneKalon.min}-{sectionActuelle.zoneKalon.max} bpm
+                {sectionActuelle.zoneKalon.libelle && ` (${sectionActuelle.zoneKalon.libelle})`}
+              </div>
+            )}
+            {sectionActuelle && <div>Kemenn : {sectionActuelle.explication}</div>}
+          </div>
+
+          {sectionSuivante && (
+            <div className="ligne-section ligne-section-suivante">
+              <strong>Section suivante</strong>
+              <div>
+                Nerzh {sectionSuivante.nerzh} · Tizh {sectionSuivante.tizh} Riw/min · Padelezh{' '}
+                {formatMMSS(sectionSuivante.dureeSecondes * 1000)}
+              </div>
+              {sectionSuivante.zoneKalon && (
+                <div>
+                  Kalon {sectionSuivante.zoneKalon.min}-{sectionSuivante.zoneKalon.max} bpm
+                  {sectionSuivante.zoneKalon.libelle && ` (${sectionSuivante.zoneKalon.libelle})`}
+                </div>
+              )}
+              <div>Kemenn : {sectionSuivante.explication}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="actions-seance">
         {phase === 'en_cours' ? (
           <button onClick={mettreEnPause}>Pause</button>

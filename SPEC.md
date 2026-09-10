@@ -219,3 +219,44 @@ positionné lors de la capture de référence du 2026-09-07** (seuls Stroke Rate
 Fréquence cardiaque et Temps écoulé étaient présents) — donc Pellder pourrait rester vide en
 pratique sur ce rameur précis, malgré un parsing conforme à la spec FTMS. À vérifier lors d'une
 vraie séance avec un rameur connecté.
+
+## 16. Écran de séance en direct — refonte du 2026-09-11
+
+**Kemenn** = la consigne/explication de l'exercice (`Section.explication`). Affiché avec le
+label "Kemenn :" comme les autres champs.
+
+**Disposition** : cercle Tizh à gauche, panneau à 3 lignes à droite (`disposition-seance-live`,
+row en desktop/paysage large, colonne empilée en portrait/étroit via media query). C'est
+l'**unique exception** à la convention §12 (panneau aligné à gauche pour laisser voir le
+personnage) : ce panneau recouvre volontairement le personnage, écran dense d'information
+pendant l'effort.
+- **Cercle** : maintenant un vrai cercle (`aspect-ratio: 1`, pas `width`+`height` séparés en
+  vmin — piste initiale insuffisante, corrigée après un oval constaté en usage réel). Affiche
+  le **Tizh visé** (Riw/min de la section en cours), pas le Nerzh.
+- **Panneau, fond blanc translucide** (`rgba(255,255,255,0.85)`, texte sombre) : pour que la
+  photo de fond se devine derrière tout en gardant le texte lisible — seul endroit de l'appli
+  avec ce traitement clair (tout le reste est sombre, cf. §9).
+  - **Section précédente** (n'apparaît qu'une fois une section réellement close) : Nerzh,
+    Tizh moyen mesuré, Pellder et Energiezh **du seul segment qui vient de se terminer** (delta,
+    pas cumulatif).
+  - **Section en cours**, texte nettement plus gros (`nerzh-gros`, `amzervezh-gros`, ~2.2rem) :
+    Nerzh en cours, Pellder/Energiezh cumulés de la séance, Amzervezh décroissant, rappel Kalon
+    et Kemenn de la section.
+  - **Section suivante** : Nerzh, Tizh, Padelezh (durée prévue de cette section), Kalon, Kemenn.
+
+**Suivi par segment** (pour alimenter "section précédente") : à chaque nouveau segment
+(planifié ou personnalisé), on capture les compteurs de départ (distance, énergie) et on
+accumule les échantillons de Tizh reçus (`tizhSommeRef`/`tizhCompteRef`) pour calculer une
+moyenne à la fermeture du segment (`clorreSegment`, remplit aussi
+`EvenementHistorique.tizhReelMoyen`, prévu dès le départ dans le type mais jamais implémenté
+avant cette refonte).
+
+**La dernière section n'a pas de fin automatique** : décidé le 2026-09-11, elle continue
+d'enregistrer indéfiniment (le compte à rebours Amzervezh reste affiché à 0:00 une fois écoulé,
+mais les données continuent d'être suivies) — seul le bouton **"Arrêter"** (sous le panneau)
+termine la séance et déclenche l'enregistrement, quelle que soit la section en cours.
+
+**Mode démo temporaire** : un bouton "Simuler (démo)" à côté de "Connecter le rameur" permet de
+tester tout l'écran sans rameur réel (Tizh aléatoire autour de la cible, Pellder/Energiezh
+incrémentés toutes les secondes). À retirer si non souhaité en production — décision en
+attente de l'utilisateur.

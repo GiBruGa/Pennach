@@ -288,12 +288,32 @@ main > * {
 
 .ecran-seance-en-cours {
   gap: 12px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.disposition-seance-live {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.zone-circulaire {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex: 0 0 auto;
 }
 
 .cercle-tizh {
-  width: 80vmin;
-  height: 80vmin;
-  max-width: 80%;
+  width: min(42vmin, 45vw, 320px);
+  aspect-ratio: 1;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -314,28 +334,73 @@ main > * {
   opacity: 0.55;
 }
 
-.cercle-tizh .nerzh-valeur {
-  font-size: 15vmin;
+.cercle-tizh .tizh-valeur {
+  font-size: 12vmin;
   font-weight: 700;
   color: white;
 }
 
-.chronos {
-  display: flex;
-  gap: 24px;
-  font-size: 1.4rem;
+.chrono-seance {
+  font-size: 1.3rem;
   font-variant-numeric: tabular-nums;
 }
 
-.explication {
-  max-width: 480px;
-  font-size: 1.1rem;
+.panneau-sections {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #1a1a1a;
+  border-radius: 14px;
+  padding: 14px;
+  overflow-y: auto;
+  text-align: left;
 }
 
-.apercu-section-suivante {
-  font-size: 0.9rem;
-  opacity: 0.75;
-  max-width: 480px;
+.ligne-section {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.ligne-section:last-child {
+  border-bottom: none;
+}
+
+.ligne-section strong {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.ligne-section-precedente,
+.ligne-section-suivante {
+  font-size: 0.85rem;
+}
+
+.ligne-section-courante {
+  font-size: 1.15rem;
+}
+
+.nerzh-gros,
+.amzervezh-gros {
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (orientation: portrait), (max-width: 700px) {
+  .disposition-seance-live {
+    flex-direction: column;
+  }
+
+  .panneau-sections {
+    overflow-y: visible;
+  }
 }
 
 .actions-seance {
