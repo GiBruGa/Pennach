@@ -252,9 +252,33 @@ main > * {
   gap: 8px;
 }
 
+.ligne-parametres label {
+  align-items: center;
+  text-align: center;
+}
+
+.ligne-parametres input,
+.ligne-parametres select {
+  text-align: center;
+}
+
+.champ-etale-3 {
+  grid-column: span 3;
+  align-items: stretch;
+  text-align: left;
+}
+
+.champ-etale-3 textarea {
+  text-align: left;
+}
+
 @media (max-width: 480px) {
   .ligne-parametres {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .champ-etale-3 {
+    grid-column: span 2;
   }
 }
 
@@ -283,15 +307,27 @@ main > * {
   flex-wrap: wrap;
 }
 
+.actions-panneau button,
 .bouton-ajouter-apres {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg-carte);
   color: var(--text);
+}
+
+.groupe-actions {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.bouton-lancer {
+  background: var(--accent) !important;
+  color: #06121f !important;
+  font-weight: 700;
+  border-color: var(--accent) !important;
 }
 
 /* Écran de séance : pensé pour le mode paysage */

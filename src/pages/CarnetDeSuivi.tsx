@@ -207,38 +207,47 @@ export default function CarnetDeSuivi() {
                                 onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
                               />
                             </label>
-                            <div className="actions-panneau">
-                              <button type="button" onClick={supprimer}>
-                                Supprimer
-                              </button>
-                              <button type="button" onClick={sauvegarder}>
-                                Fermer (sauvegarder)
+                            <div className="groupe-actions">
+                              <div className="actions-panneau">
+                                <button type="button" onClick={supprimer}>
+                                  Supprimer
+                                </button>
+                                <button type="button" onClick={sauvegarder}>
+                                  Fermer (sauvegarder)
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                className="bouton-ajouter-apres"
+                                onClick={() => ajouterApres(brouillon.id)}
+                              >
+                                Ajouter après
                               </button>
                             </div>
-                            <button
-                              type="button"
-                              className="bouton-ajouter-apres"
-                              onClick={() => ajouterApres(brouillon.id)}
-                            >
-                              Ajouter après
-                            </button>
                           </div>
                         ) : (
                           <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>
-                            <label>
-                              Type de séance
-                              <select
-                                value={brouillon.typeSession}
-                                onChange={(e) => setBrouillon({ ...brouillon, typeSession: e.target.value })}
-                              >
-                                {TYPES_SESSION.map((t) => (
-                                  <option key={t} value={t}>
-                                    {t}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
                             <div className="ligne-parametres">
+                              <label>
+                                Type de séance
+                                <select
+                                  value={brouillon.typeSession}
+                                  onChange={(e) => setBrouillon({ ...brouillon, typeSession: e.target.value })}
+                                >
+                                  {TYPES_SESSION.map((t) => (
+                                    <option key={t} value={t}>
+                                      {t}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="champ-etale-3">
+                                Arabat Disoñjal
+                                <textarea
+                                  value={brouillon.remarques ?? ''}
+                                  onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
+                                />
+                              </label>
                               <label>
                                 Nerzh (1-10)
                                 <input
@@ -305,34 +314,29 @@ export default function CarnetDeSuivi() {
                                 />
                               </label>
                             </div>
-                            <label>
-                              Arabat Disoñjal
-                              <textarea
-                                value={brouillon.remarques ?? ''}
-                                onChange={(e) => setBrouillon({ ...brouillon, remarques: e.target.value })}
-                              />
-                            </label>
-                            <div className="actions-panneau">
-                              <button type="button" onClick={fermer}>
-                                Sortir
-                              </button>
-                              <button type="button" onClick={supprimer}>
-                                Supprimer
-                              </button>
-                              <button type="button" onClick={sauvegarder}>
-                                Sauvegarder
-                              </button>
-                              <button type="button" onClick={sauvegarderEtLancer}>
-                                Lancer
+                            <div className="groupe-actions">
+                              <div className="actions-panneau">
+                                <button type="button" onClick={fermer}>
+                                  Sortir
+                                </button>
+                                <button type="button" onClick={supprimer}>
+                                  Supprimer
+                                </button>
+                                <button type="button" onClick={sauvegarder}>
+                                  Sauvegarder
+                                </button>
+                                <button type="button" onClick={sauvegarderEtLancer} className="bouton-lancer">
+                                  Lancer
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                className="bouton-ajouter-apres"
+                                onClick={() => ajouterApres(brouillon.id)}
+                              >
+                                Ajouter après
                               </button>
                             </div>
-                            <button
-                              type="button"
-                              className="bouton-ajouter-apres"
-                              onClick={() => ajouterApres(brouillon.id)}
-                            >
-                              Ajouter après
-                            </button>
                           </div>
                         )}
                       </td>
