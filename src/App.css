@@ -159,6 +159,88 @@ main {
   color: var(--rouge);
 }
 
+.panneau-generateur {
+  background: var(--bg-carte);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.panneau-generateur label,
+.ecran-editeur-programme .carte-section label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.plage-kalon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plage-kalon input[type='number'] {
+  width: 70px;
+}
+
+.plage-kalon input[type='text'] {
+  flex: 1;
+}
+
+.zone-kalon {
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+
+.liste-etapes-progression {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.carte-etape-progression {
+  background: var(--bg-carte);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.carte-etape-progression label,
+.ecran-plan-progression > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.carte-etape-progression input,
+.carte-etape-progression textarea,
+.ecran-plan-progression > label input {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.ligne-parametres,
+.ligne-resultats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ligne-parametres label,
+.ligne-resultats label {
+  min-width: 100px;
+}
+
 /* Écran de séance : pensé pour le mode paysage */
 .ecran-seance {
   display: flex;

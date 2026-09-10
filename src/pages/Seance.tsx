@@ -285,6 +285,12 @@ export default function Seance() {
         <div>Section : {formatMMSS(Math.max(0, tempsRestantSection))}</div>
         <div>Séance : {formatMMSS(Math.max(0, tempsRestantSeance))}</div>
       </div>
+      {sectionActuelle?.zoneKalon && (
+        <p className="zone-kalon">
+          Kalon visé : {sectionActuelle.zoneKalon.min}-{sectionActuelle.zoneKalon.max} bpm
+          {sectionActuelle.zoneKalon.libelle && ` (${sectionActuelle.zoneKalon.libelle})`}
+        </p>
+      )}
       {sectionActuelle && <p className="explication">{sectionActuelle.explication}</p>}
       {sectionSuivante && (
         <div className="apercu-section-suivante">

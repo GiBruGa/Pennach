@@ -97,4 +97,42 @@ Les grandeurs de l'app portent des noms en breton :
 - Stack front : **React + Vite + TypeScript**
 - **Stockage : Supabase** (Postgres), comme les autres outils UrBizia — décidé le 2026-09-07 pour permettre à toute la famille de retrouver son historique sur n'importe quel appareil. Projet Supabase dédié `Pennach` (org UrBizia, indépendant des autres projets).
 - **Profils multiples sans authentification** : sélecteur de profil simple (prénom) au premier lancement sur un appareil, stocké en `localStorage` sur l'appareil ; les données (programmes, historique) sont scopées par `profil_id` dans Supabase. Pas de mot de passe — usage familial privé, confidentialité basée sur le secret du lien de l'appli + policies RLS.
-- Tables : `profils`, `programmes` (5 slots par profil, `sections` en JSONB), `seances` (historique, `evenements` en JSONB)
+- Tables : `profils`, `programmes` (5 slots par profil, `sections` en JSONB), `seances` (historique, `evenements` en JSONB), `plans_progression` (`etapes` en JSONB)
+
+## 10. Génération automatique de sections (2026-09-10)
+
+Reprise du classeur Excel de référence de l'utilisateur (`Rameur - Programme PP MIIT.xlsm`,
+feuille "Programmation Séance") : un mode de génération automatique dans l'éditeur de
+programme, à partir de 4 critères, au lieu de saisir chaque section à la main.
+
+- **4 critères** : Puissance (1-10), Rythme (1-10), Récupération (1-10, plus haut = plus de
+  repos), Durée totale (minutes)
+- **Échauffement** fixe (5 min), **retour au calme** final qui absorbe le temps restant (règle
+  standard §2), et entre les deux une alternance **Effort / Récupération** :
+  - la durée de chaque section d'**Effort** suit la courbe `EvolTemps` (la fonction
+    `courbe(t,D)` dérivée avec l'utilisateur : montée sinusoïdale 1→2 sur les 2/3 du temps,
+    descente sinusoïdale 2→1 sur le tiers restant) — les efforts s'allongent puis se
+    raccourcissent au fil de la séance
+  - la durée de chaque **Récupération** est fixe : `0.3 + Récupération × 0.2` minutes
+- **Nerzh et Tizh** de chaque section dérivés des critères Puissance/Rythme par les mêmes
+  formules que le classeur (barèmes différents selon Échauffement / Effort / Récupération /
+  Retour)
+- **Kalon (fréquence cardiaque) par type de section**, informatif ("constat", non asservi —
+  pas de connexion capteur FC pour l'instant, cf. §6) : Échauffement 119-128 bpm, Effort
+  138-147 bpm (Zone 3), Récupération 120-130 bpm (Zone 1/2), Retour < 119 bpm — modifiables
+  par section après génération
+- Implémenté dans `src/lib/generateur.ts` ; la génération **remplace** les sections existantes
+  du programme (confirmation demandée), le résultat reste ensuite éditable section par section
+  comme avant
+
+## 11. Plans de progression
+
+Reprise de la feuille "Carnet de Suivi" du même classeur : un plan de progression est une
+suite libre d'étapes (pas limité à 5 comme les programmes), chacune avec :
+- un nom de **phase** (texte libre, ex: "Phase 1 - Adaptation Volume")
+- les **4 critères cibles** (mêmes que §10)
+- des **résultats réels** renseignés après coup : date réalisée, Kalon moyen/max, km
+  parcourus, énergie dépensée, remarques libres
+
+Un profil peut créer plusieurs plans. Stockage : table `plans_progression`, scopée par
+`profil_id` comme le reste.

@@ -2,10 +2,20 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
 import { getProgramme, saveProgramme } from '../lib/storage'
-import type { Programme, Section } from '../types'
+import { genererSections } from '../lib/generateur'
+import type { ParametresGeneration, Programme, Section } from '../types'
 
 function nouvelleSection(): Section {
   return { id: crypto.randomUUID(), dureeSecondes: 60, nerzh: 8, tizh: 20, explication: '' }
+}
+
+function parametresParDefaut(dureeTotaleSecondes: number): ParametresGeneration {
+  return {
+    puissance: 5,
+    rythme: 5,
+    recuperation: 5,
+    dureeTotaleMinutes: Math.max(20, Math.round(dureeTotaleSecondes / 60) || 45),
+  }
 }
 
 export default function ProgrammeEditor() {
@@ -14,9 +24,14 @@ export default function ProgrammeEditor() {
   const navigate = useNavigate()
   const [programme, setProgramme] = useState<Programme | null>(null)
   const [enregistrement, setEnregistrement] = useState(false)
+  const [afficherGenerateur, setAfficherGenerateur] = useState(false)
+  const [params, setParams] = useState<ParametresGeneration>(() => parametresParDefaut(0))
 
   useEffect(() => {
-    getProgramme(profil.id, Number(slot)).then(setProgramme)
+    getProgramme(profil.id, Number(slot)).then((p) => {
+      setProgramme(p)
+      setParams(parametresParDefaut(p.dureeTotaleSecondes))
+    })
   }, [profil.id, slot])
 
   if (!programme) return <p>Chargement…</p>
@@ -34,12 +49,41 @@ export default function ProgrammeEditor() {
     })
   }
 
+  function majZoneKalon(index: number, patch: Partial<Section['zoneKalon']>) {
+    setProgramme((p) => {
+      if (!p) return p
+      const sections = p.sections.map((s, i) => {
+        if (i !== index) return s
+        const zone = { min: 0, max: 0, ...s.zoneKalon, ...patch }
+        return { ...s, zoneKalon: zone }
+      })
+      return { ...p, sections }
+    })
+  }
+
   function ajouterSection() {
     setProgramme((p) => (p ? { ...p, sections: [...p.sections, nouvelleSection()] } : p))
   }
 
   function supprimerSection(index: number) {
     setProgramme((p) => (p ? { ...p, sections: p.sections.filter((_, i) => i !== index) } : p))
+  }
+
+  function lancerGeneration() {
+    if (!programme) return
+    if (
+      programme.sections.length > 0 &&
+      !confirm('Ça remplace toutes les sections actuelles du programme. Continuer ?')
+    ) {
+      return
+    }
+    const sections = genererSections(params)
+    setProgramme({
+      ...programme,
+      dureeTotaleSecondes: params.dureeTotaleMinutes * 60,
+      sections,
+    })
+    setAfficherGenerateur(false)
   }
 
   async function enregistrer() {
@@ -102,6 +146,62 @@ export default function ProgrammeEditor() {
         Signal sonore du Tizh (bip à chaque coup prévu)
       </label>
 
+      <button type="button" onClick={() => setAfficherGenerateur((v) => !v)}>
+        {afficherGenerateur ? 'Fermer la génération automatique' : 'Générer les sections automatiquement'}
+      </button>
+
+      {afficherGenerateur && (
+        <div className="panneau-generateur">
+          <p className="note">
+            Remplit les sections à partir de 4 critères, sur le même principe qu'un HIIT
+            périodisé : effort qui monte en puissance puis redescend, récupération fixe,
+            échauffement et retour au calme.
+          </p>
+          <label>
+            Puissance (Nerzh de l'effort, 1-10)
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={params.puissance}
+              onChange={(e) => setParams({ ...params, puissance: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Rythme (Tizh de l'effort, 1-10)
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={params.rythme}
+              onChange={(e) => setParams({ ...params, rythme: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Récupération (1-10, plus haut = plus de repos)
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={params.recuperation}
+              onChange={(e) => setParams({ ...params, recuperation: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Durée totale (minutes)
+            <input
+              type="number"
+              min={20}
+              value={params.dureeTotaleMinutes}
+              onChange={(e) => setParams({ ...params, dureeTotaleMinutes: Number(e.target.value) })}
+            />
+          </label>
+          <button type="button" onClick={lancerGeneration}>
+            Générer les sections
+          </button>
+        </div>
+      )}
+
       <h2>Sections</h2>
       <ul className="liste-sections">
         {programme.sections.map((section, i) => {
@@ -141,6 +241,30 @@ export default function ProgrammeEditor() {
                   value={section.tizh}
                   onChange={(e) => majSection(i, { tizh: Number(e.target.value) })}
                 />
+              </label>
+              <label>
+                Kalon visé, min-max (bpm, informatif)
+                <span className="plage-kalon">
+                  <input
+                    type="number"
+                    min={0}
+                    value={section.zoneKalon?.min ?? ''}
+                    onChange={(e) => majZoneKalon(i, { min: Number(e.target.value) })}
+                  />
+                  –
+                  <input
+                    type="number"
+                    min={0}
+                    value={section.zoneKalon?.max ?? ''}
+                    onChange={(e) => majZoneKalon(i, { max: Number(e.target.value) })}
+                  />
+                  <input
+                    type="text"
+                    placeholder="ex : Zone 3"
+                    value={section.zoneKalon?.libelle ?? ''}
+                    onChange={(e) => majZoneKalon(i, { libelle: e.target.value })}
+                  />
+                </span>
               </label>
               <label>
                 Explication de l'exercice

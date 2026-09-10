@@ -1,9 +1,16 @@
+export interface ZoneKalon {
+  min: number
+  max: number
+  libelle?: string // ex: "Zone 3"
+}
+
 export interface Section {
   id: string
   dureeSecondes: number
   nerzh: number // résistance, 1-16
   tizh: number // cadence prévue, coups/min
   explication: string // max 200 caractères
+  zoneKalon?: ZoneKalon // plage de fréquence cardiaque visée (constat, non asservie)
 }
 
 export interface Programme {
@@ -38,4 +45,33 @@ export interface Seance {
   fin?: number
   statut: 'terminee' | 'arretee'
   evenements: EvenementHistorique[]
+}
+
+export interface ParametresGeneration {
+  puissance: number // 1 à 10
+  rythme: number // 1 à 10
+  recuperation: number // 1 à 10 (plus haut = plus de repos)
+  dureeTotaleMinutes: number
+}
+
+export interface EtapeProgression {
+  id: string
+  numero: number
+  phase: string
+  parametres: ParametresGeneration
+  // Renseigné après coup, une fois la séance réellement faite :
+  seanceId?: string
+  dateRealisee?: number // timestamp ms
+  frequenceCardiaqueMoyenne?: number
+  frequenceCardiaqueMax?: number
+  kmRealises?: number
+  energieDepensee?: number
+  remarques?: string
+}
+
+export interface PlanProgression {
+  id: string
+  profilId: string
+  nom: string
+  etapes: EtapeProgression[]
 }

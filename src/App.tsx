@@ -7,6 +7,8 @@ import ProgrammesList from './pages/ProgrammesList'
 import ProgrammeEditor from './pages/ProgrammeEditor'
 import Seance from './pages/Seance'
 import Historique from './pages/Historique'
+import PlansProgression from './pages/PlansProgression'
+import PlanProgressionEditeur from './pages/PlanProgressionEditeur'
 import './App.css'
 
 function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil: () => void }) {
@@ -18,6 +20,7 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
             Pennac'h
           </Link>
           <nav>
+            <Link to="/progression">Progression</Link>
             <Link to="/historique">Historique</Link>
             <button onClick={changerProfil}>{profil.nom} ▾</button>
           </nav>
@@ -28,6 +31,8 @@ function AppConnecte({ profil, changerProfil }: { profil: Profil; changerProfil:
             <Route path="/programme/:slot" element={<ProgrammeEditor />} />
             <Route path="/seance/:slot" element={<Seance />} />
             <Route path="/historique" element={<Historique />} />
+            <Route path="/progression" element={<PlansProgression />} />
+            <Route path="/progression/:id" element={<PlanProgressionEditeur />} />
           </Routes>
         </main>
       </HashRouter>

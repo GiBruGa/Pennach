@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient'
-import type { Programme, Seance } from '../types'
+import type { PlanProgression, Programme, Seance } from '../types'
 
 export function programmeParDefaut(slot: number): Programme {
   return {
@@ -102,5 +102,41 @@ export async function saveSeance(profilId: string, seance: Seance): Promise<void
     statut: seance.statut,
     evenements: seance.evenements,
   })
+  if (error) throw error
+}
+
+export async function getPlansProgression(profilId: string): Promise<PlanProgression[]> {
+  const { data, error } = await supabase
+    .from('plans_progression')
+    .select('id, nom, etapes')
+    .eq('profil_id', profilId)
+    .order('updated_at', { ascending: false })
+  if (error) throw error
+  return data.map((l) => ({ id: l.id, profilId, nom: l.nom, etapes: l.etapes }))
+}
+
+export async function getPlanProgression(id: string): Promise<PlanProgression | null> {
+  const { data, error } = await supabase
+    .from('plans_progression')
+    .select('id, profil_id, nom, etapes')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return data ? { id: data.id, profilId: data.profil_id, nom: data.nom, etapes: data.etapes } : null
+}
+
+export async function savePlanProgression(plan: PlanProgression): Promise<void> {
+  const { error } = await supabase.from('plans_progression').upsert({
+    id: plan.id,
+    profil_id: plan.profilId,
+    nom: plan.nom,
+    etapes: plan.etapes,
+    updated_at: new Date().toISOString(),
+  })
+  if (error) throw error
+}
+
+export async function supprimerPlanProgression(id: string): Promise<void> {
+  const { error } = await supabase.from('plans_progression').delete().eq('id', id)
   if (error) throw error
 }
