@@ -214,10 +214,14 @@ export default function CarnetDeSuivi() {
                               <button type="button" onClick={sauvegarder}>
                                 Fermer (sauvegarder)
                               </button>
-                              <button type="button" onClick={() => ajouterApres(brouillon.id)}>
-                                Ajouter après
-                              </button>
                             </div>
+                            <button
+                              type="button"
+                              className="bouton-ajouter-apres"
+                              onClick={() => ajouterApres(brouillon.id)}
+                            >
+                              Ajouter après
+                            </button>
                           </div>
                         ) : (
                           <div className="panneau-edition" onClick={(e) => e.stopPropagation()}>
@@ -321,10 +325,14 @@ export default function CarnetDeSuivi() {
                               <button type="button" onClick={sauvegarderEtLancer}>
                                 Lancer
                               </button>
-                              <button type="button" onClick={() => ajouterApres(brouillon.id)}>
-                                Ajouter après
-                              </button>
                             </div>
+                            <button
+                              type="button"
+                              className="bouton-ajouter-apres"
+                              onClick={() => ajouterApres(brouillon.id)}
+                            >
+                              Ajouter après
+                            </button>
                           </div>
                         )}
                       </td>

@@ -283,8 +283,15 @@ main > * {
   flex-wrap: wrap;
 }
 
-.actions-panneau button:last-child {
-  flex-basis: 100%;
+.bouton-ajouter-apres {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-carte);
+  color: var(--text);
 }
 
 /* Écran de séance : pensé pour le mode paysage */
