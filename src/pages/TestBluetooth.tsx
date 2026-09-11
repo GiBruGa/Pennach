@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { RowerConnection } from '../lib/ble'
 
 const DUREE_TEST_MS = 30_000
@@ -60,6 +61,9 @@ export default function TestBluetooth() {
 
   return (
     <div className="ecran-test-bluetooth">
+      <Link to="/" className="lien-retour-carnet">
+        ◀ Retour
+      </Link>
       <h1>Test de connexion Bluetooth</h1>
       {erreur && <p className="erreur">{erreur}</p>}
 
@@ -77,8 +81,8 @@ export default function TestBluetooth() {
           <p className="consigne-test">
             Ramez 30s pour que je puisse vérifier la liaison avec votre rameur Merac'h.
           </p>
-          <p>Temps restant : {Math.ceil(tempsRestant / 1000)}s</p>
-          <p>Tizh reçu : {tizhReel} Riw/min</p>
+          <p>Temps restant {Math.ceil(tempsRestant / 1000)}s</p>
+          <p>Tizh reçu {tizhReel} Riw/min</p>
           <p className="note">{nbNotifications} trame(s) reçue(s)</p>
         </>
       )}
@@ -86,7 +90,7 @@ export default function TestBluetooth() {
       {phase === 'succes' && (
         <>
           <p className="succes-message">
-            Connexion vérifiée : {nbNotifications} trame(s) reçue(s) de {nomAppareil}.
+            Connexion vérifiée — {nbNotifications} trame(s) reçue(s) de {nomAppareil}.
           </p>
           <button type="button" onClick={recommencer}>
             Refaire un test

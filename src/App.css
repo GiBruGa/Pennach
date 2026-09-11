@@ -139,6 +139,22 @@ main.main-seance {
 
 main.main-seance > * {
   padding: 8px 10px;
+  /* Pas de fond/flou de panneau ici (contrairement aux autres écrans) : le
+     personnage du fond doit rester visible entre les encarts de la séance. */
+  background: none;
+  backdrop-filter: none;
+}
+
+/* Sans panneau sombre derrière, le texte clair par défaut (--text) devient illisible
+   sur la photo de fond claire : ces écrans (avant le lancement, décompte) passent en
+   texte sombre. Les écrans avec encarts propres (séance en cours) n'en ont pas besoin. */
+.ecran-seance-avant,
+.ecran-compte-a-rebours {
+  color: #1a1a1a;
+}
+
+.ecran-seance-avant .erreur {
+  color: var(--rouge);
 }
 
 .lien-retour-carnet {
@@ -254,14 +270,57 @@ main.main-seance > * {
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  color: #e8a355;
+  border: 1px solid #e8a355;
   border-radius: 999px;
   padding: 2px 8px;
 }
 
-.barre-outils-carnet {
-  margin-bottom: 10px;
+.badge-prochaine,
+.badge-terminee {
+  align-self: flex-start;
+}
+
+.badge-terminee {
+  display: inline-block;
+  margin: 4px 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--vert);
+  border: 1px solid var(--vert);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* Bandeau titre "Karned Heuliañ", partagé par le carnet (titre + bouton d'ajout) et
+   l'écran de détail d'une étape (retour + titre) — cf. charte graphique, SPEC.md. */
+.barre-titre-carnet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 27, 51, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.barre-titre-carnet .titre-karned {
+  font-size: clamp(1rem, 5.5vw, 1.35rem);
+  white-space: nowrap;
+  color: #fff;
+}
+
+.barre-titre-carnet button,
+.barre-titre-carnet .lien-retour-carnet {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 /* Règle générale : toute cellule/valeur numérique reste centrée, où qu'elle apparaisse. */
@@ -297,21 +356,23 @@ main.main-seance > * {
   }
 }
 
+/* Fond sombre translucide (comme le reste de l'appli) pour laisser deviner le
+   personnage en fond, plutôt qu'une carte opaque — cf. charte graphique. */
+.carte-etape,
+.carte-etape-detail {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--bg-carte);
+  color: var(--text);
+}
+
 .carte-etape {
   cursor: pointer;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .carte-etape:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.carte-etape.carte-ouverte {
-  cursor: default;
-  border-color: var(--accent);
+  background: rgba(15, 27, 51, 0.9);
 }
 
 .carte-etape-entete {
@@ -355,6 +416,9 @@ main.main-seance > * {
   opacity: 0.75;
 }
 
+/* Charte graphique — une couleur par grandeur, réutilisée partout où elle apparaît
+   (Karned Heuliañ, écran de détail, écran de séance en direct). Padelezh reste neutre
+   (blanc/bordé) : c'est une consigne de plan, pas une mesure réalisée. */
 .pastille-nerzh {
   background: #e8b4bc;
   color: #5a1f27;
@@ -370,130 +434,226 @@ main.main-seance > * {
   color: #1f4a2c;
 }
 
-.pastille-padelezh {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
+.pastille-padelezh,
+.pastille-neutre {
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-.carte-etape-arabat {
+.pastille-energiezh {
+  background: #9adfc8;
+  color: #114a34;
+}
+
+.pastille-amzervezh {
+  background: #f0d9a0;
+  color: #6b4f0f;
+}
+
+.pastille-pellder {
+  background: #d9c3f0;
+  color: #4a2d6b;
+}
+
+/* Arabat Disoñjal : couleur chaude dédiée, distincte des pastilles ci-dessus — cf.
+   charte graphique. Règle d'uniformisation : l'étiquette "Arabat Disoñjal" doit
+   toujours avoir la même taille que les étiquettes voisines (Nerzh, Tizh...) de
+   l'écran où elle apparaît — ici celle du Karned Heuliañ (.grandeur-label,
+   0.8rem) ; sur l'écran de détail, on réutilise directement .param-detail-label. */
+.carte-etape-arabat-label {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-bottom: 3px;
+}
+
+.carte-etape-arabat-texte {
+  background: #f3e6c9;
+  color: #5c4620;
+  border-radius: 8px;
+  padding: 6px 10px;
   font-size: 0.85rem;
-  margin: 6px 0;
-}
-
-.carte-etape hr {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 8px 0;
 }
 
 .carte-etape-resultat {
-  font-size: 0.85rem;
-  opacity: 0.85;
-  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin: 8px 0 0;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
 }
 
-.ligne-edition td {
-  padding: 0;
-  border-bottom: 2px solid var(--accent);
-}
-
-.panneau-edition {
-  white-space: normal;
-  padding: 12px;
+/* Écran de détail d'une étape (remplace l'ancien panneau d'édition en pop-up) */
+.carte-etape-detail {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.panneau-edition label {
+.detail-colonne-params {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.9rem;
+  gap: 10px;
+  min-width: 0;
 }
 
-.ligne-parametres {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.ligne-parametres label {
-  align-items: center;
-  text-align: center;
-}
-
-.ligne-parametres input,
-.ligne-parametres select {
-  text-align: center;
-}
-
-.champ-etale-3 {
-  grid-column: span 3;
-  align-items: stretch;
-  text-align: left;
-}
-
-.champ-etale-3 textarea {
-  text-align: left;
-}
-
-@media (max-width: 480px) {
-  .ligne-parametres {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .champ-etale-3 {
-    grid-column: span 2;
-  }
-}
-
-.panneau-edition input,
-.panneau-edition select,
-.panneau-edition textarea {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 0.9rem;
-}
-
-.resume-resultat {
+.liste-params-detail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  font-size: 0.85rem;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ligne-param-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.param-detail-label {
+  font-size: 0.9rem;
+  min-width: 6.5em;
   opacity: 0.85;
 }
 
-.actions-panneau {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.param-detail-boite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3em;
+  height: 38px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-family: inherit;
 }
 
-.actions-panneau button,
-.bouton-ajouter-apres {
-  padding: 10px 14px;
+input.param-detail-boite {
+  width: 4.5em;
+  text-align: center;
+}
+
+.param-detail-unite {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.param-detail-valeur-simple {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.arabat-detail-texte {
+  background: #f3e6c9;
+  color: #5c4620;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  min-height: 44px;
+}
+
+textarea.arabat-detail-champ {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.titre-resultats-detail {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.carte-etape-detail hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+  width: 100%;
+}
+
+.actions-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.actions-detail button {
+  padding: 12px 0;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: var(--bg-carte);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
+  font-size: 0.95rem;
 }
 
-.groupe-actions {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.bouton-lancer {
-  background: var(--accent) !important;
-  color: #06121f !important;
+.bouton-lancer-detail {
+  color: var(--accent) !important;
   font-weight: 700;
-  border-color: var(--accent) !important;
+}
+
+/* En paysage, plus de place en largeur qu'en hauteur : les consignes et les boutons
+   se placent côte à côte plutôt qu'empilés (cf. canevas Pennac'h Carnet Paysage). Tout
+   doit tenir dans la hauteur de l'écran (pas de header au-dessus, cf. App.tsx), donc
+   .ecran-etape-detail est borné et chaque étage se resserre en conséquence. Ce bloc
+   doit rester APRÈS les règles de base .detail-* ci-dessus (même spécificité : à
+   spécificité égale, c'est l'ordre dans le fichier qui décide, pas l'imbrication
+   dans la media query). */
+@media (orientation: landscape) {
+  .ecran-etape-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: calc(100svh - 32px);
+  }
+
+  .carte-etape-detail {
+    flex: 1;
+    min-height: 0;
+    flex-direction: row;
+    gap: 16px;
+    padding: 10px 16px;
+    overflow: hidden;
+  }
+
+  .detail-colonne-params {
+    flex: 1;
+    min-height: 0;
+    gap: 6px;
+    /* L'état "terminée" ajoute un bloc Résultats sous les consignes : plutôt que de
+       tout comprimer au risque de chevaucher, cette colonne défile si besoin. */
+    overflow-y: auto;
+  }
+
+  .carte-etape-entete {
+    font-size: 0.85rem;
+  }
+
+  .liste-params-detail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .liste-params-detail .ligne-param-detail {
+    flex: 0 0 calc(50% - 8px);
+  }
+
+  .param-detail-boite {
+    height: 30px;
+    font-size: 0.95rem;
+  }
+
+  .arabat-detail-texte {
+    padding: 6px 10px;
+  }
+
+  .actions-detail {
+    flex: 0 0 200px;
+    justify-content: flex-end;
+    margin-top: 0;
+  }
 }
 
 /* Écran de séance : pensé pour le mode paysage */
@@ -519,44 +679,45 @@ main.main-seance > * {
   min-height: calc(100svh - 28px);
 }
 
-/* Bandeaux fins section précédente/suivante, cf. maquette Pennac'h - Écrans.pdf page 5 :
-   "Keitad" = moyenne — en haut les valeurs moyennes réalisées, en bas les consignes à venir. */
-.bandeau-section-precedente,
-.bandeau-section-suivante {
-  width: 100%;
-  padding: 4px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: clamp(0.6rem, 2vh, 0.8rem);
-  opacity: 0.85;
-  text-align: left;
-  flex: 0 0 auto;
-}
-
+/* Deux colonnes, cf. le canevas de mise au point (Pennac'h Séance Mockup) : carte de
+   la section en cours à gauche (largeur ajustée à son contenu, pleine hauteur — pas
+   de bandeau "section précédente", jugé illisible pendant l'effort), cercle/horloge/
+   section suivante/boutons calés tout à droite, dans la largeur du bandeau. */
 .corps-seance-live {
   display: flex;
-  flex-direction: row;
+  justify-content: space-between;
   align-items: stretch;
-  gap: 10px;
+  gap: clamp(6px, 1.6vw, 16px);
   width: 100%;
   flex: 1;
   min-height: 0;
 }
 
-.zone-circulaire {
+.colonne-circulaire {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+  gap: clamp(5px, 2.5vh, 10px);
+  min-width: 0;
+  min-height: 0;
+}
+
+.bloc-cercle-horloge {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   justify-content: center;
-  gap: 4px;
-  flex: 0 0 auto;
+  gap: clamp(6px, 3.5vh, 14px);
 }
 
 .cercle-tizh {
-  width: min(28vh, 30vw, 220px);
+  width: min(38vh, 19vw, 170px);
   aspect-ratio: 1;
   border-radius: 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   transition: opacity 0.1s, background-color 0.2s;
@@ -576,95 +737,186 @@ main.main-seance > * {
 }
 
 .cercle-tizh .tizh-valeur {
-  font-size: clamp(1.5rem, 9vh, 3rem);
+  font-size: clamp(1.6rem, 15vh, 3.9rem);
   font-weight: 700;
   color: white;
+  line-height: 1.1;
+}
+
+.cercle-tizh .tizh-unite {
+  font-size: clamp(0.65rem, 4vh, 1rem);
+  color: white;
+  opacity: 0.9;
+}
+
+.boite-horloge {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  padding: clamp(4px, 2vh, 8px) clamp(10px, 2.5vw, 22px);
+  text-align: center;
 }
 
 .horloge-seance {
-  font-size: clamp(0.9rem, 3.4vh, 1.5rem);
+  font-size: clamp(1rem, 8.5vh, 2.125rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
+  color: #1a3a6b;
+}
+
+.horloge-legende {
+  font-size: clamp(0.55rem, 3.25vh, 0.8125rem);
+  color: #1a3a6b;
+  opacity: 0.7;
 }
 
 .carte-section-courante {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(4px, 1.6vh, 14px);
-  background: rgba(255, 255, 255, 0.92);
+  gap: clamp(5px, 2.5vh, 10px);
+  background: rgba(255, 255, 255, 0.94);
   color: #1a1a1a;
   border-radius: 16px;
-  padding: clamp(6px, 1.6vh, 18px) clamp(8px, 2vw, 22px);
+  padding: clamp(6px, 3vh, 12px) clamp(10px, 2.27vw, 20px);
   overflow: hidden;
   text-align: left;
 }
 
 .entete-carte-courante {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: clamp(0.6rem, 2.2vh, 0.9rem);
-  font-weight: 600;
-  opacity: 0.75;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: clamp(0.55rem, 3.75vh, 0.9375rem);
+  opacity: 0.85;
+}
+
+
+/* Le Kemenn (consigne libre, jusqu'à 200 caractères en base) ne doit ni élargir la
+   carte (dimensionnée sur sa colonne de valeurs) ni dépasser 2 lignes : au-delà, il
+   est tronqué avec une ellipse plutôt que de casser la mise en page. */
+.texte-kemenn {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: clamp(0.5rem, 3.25vh, 0.8125rem);
+  /* Doit être borné pour que le clamp à 2 lignes ait un sens — sans largeur fixe, le
+     texte non coupé dicterait sa propre largeur et élargirait toute la carte. Calé
+     approximativement sur la largeur naturelle de la colonne de valeurs en dessous. */
+  max-width: clamp(180px, 34vw, 320px);
 }
 
 .grille-valeurs-courantes {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: clamp(4px, 1vw, 12px);
-}
-
-.valeur-courante {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: max-content max-content max-content;
+  column-gap: clamp(8px, 1.82vw, 16px);
+  row-gap: clamp(4px, 2.5vh, 10px);
   align-items: center;
-  gap: 2px;
-  border-radius: 10px;
-  background: rgba(10, 25, 48, 0.06);
-  padding: clamp(4px, 1.4vh, 12px) 4px;
-  min-width: 0;
 }
 
-.valeur-courante-label {
-  font-size: clamp(0.5rem, 1.6vh, 0.75rem);
-  text-transform: uppercase;
-  opacity: 0.6;
+.ligne-valeur-label {
+  font-size: clamp(0.8rem, 5.75vh, 1.4375rem);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.valeur-courante-chiffre {
-  font-size: clamp(1rem, 5vh, 2rem);
+.ligne-valeur-boite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2em;
+  height: clamp(28px, 11.5vh, 46px);
+  padding: 0 clamp(6px, 1.48vw, 13px);
+  border-radius: 8px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  font-size: clamp(1rem, 6.75vh, 1.6875rem);
+  border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-@media (orientation: portrait), (max-width: 700px) {
-  .corps-seance-live {
-    flex-direction: column;
-  }
-
-  .grille-valeurs-courantes {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.ligne-valeur-boite.boite-mini {
+  height: clamp(14px, 5.25vh, 21px);
+  font-size: clamp(0.55rem, 3.25vh, 0.8125rem);
+  padding: 0 clamp(4px, 0.8vw, 7px);
+  min-width: clamp(20px, 3.4vw, 30px);
 }
 
-.actions-seance {
+.ligne-valeur-unite {
+  font-size: clamp(0.6rem, 4vh, 1rem);
+  opacity: 0.75;
+}
+
+/* Bandeau fin section suivante, sur une seule ligne (pas de Kalon/Kemenn : priorité
+   donnée à la taille du cercle/horloge au-dessus). Pas de bandeau symétrique pour la
+   section précédente : illisible en plein effort, et la place libérée sert à
+   agrandir la carte de la section en cours (cf. SPEC.md). Fond bleu très clair pour
+   se distinguer de la carte blanche à gauche. */
+.bandeau-section-suivante {
+  align-self: stretch;
+  padding: clamp(4px, 2vh, 8px) clamp(8px, 1.6vw, 14px);
+  border-radius: 8px;
+  background: #dcebfb;
+  color: #1a1a1a;
+  font-size: clamp(0.55rem, 3.25vh, 0.8125rem);
+  text-align: left;
   display: flex;
-  gap: 12px;
-  margin-top: 2px;
-  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(5px, 2.5vh, 10px);
+  white-space: nowrap;
+}
+
+.bandeau-section-suivante .ligne-valeur-label {
+  font-size: inherit;
+  font-weight: 400;
+}
+
+.bandeau-section-suivante strong {
+  font-weight: 700;
+}
+
+/* Boutons Pause/Arrêter : sous le bandeau section suivante, même largeur que lui. */
+.actions-seance {
+  align-self: stretch;
+  display: flex;
+  gap: clamp(5px, 2.5vh, 10px);
 }
 
 .actions-seance button {
-  padding: 10px 20px;
+  flex: 1;
+  padding: clamp(6px, 2.5vh, 10px) 0;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg-carte);
   color: var(--text);
+  font-size: clamp(0.65rem, 3.5vh, 0.875rem);
+}
+
+@media (orientation: portrait), (max-width: 480px) {
+  .corps-seance-live {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .colonne-circulaire {
+    align-items: center;
+    width: 100%;
+  }
+
+  .bloc-cercle-horloge {
+    align-items: center;
+  }
+
+  .bandeau-section-suivante,
+  .actions-seance {
+    align-self: center;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (orientation: portrait) {

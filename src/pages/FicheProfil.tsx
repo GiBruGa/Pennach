@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
 import {
   enregistrerMesurePouez,
@@ -74,6 +75,9 @@ export default function FicheProfil() {
 
   return (
     <div className="ecran-fiche-profil">
+      <Link to="/" className="lien-retour-carnet">
+        ◀ Retour
+      </Link>
       <h1>Fiche — {profil.nom}</h1>
       {erreur && <p className="erreur">{erreur}</p>}
 
@@ -123,7 +127,7 @@ export default function FicheProfil() {
       <h2>Pouez</h2>
       {imc !== null && (
         <p className="imc-affichage">
-          IMC : <strong>{imc.toFixed(1)}</strong>
+          IMC <strong>{imc.toFixed(1)}</strong>
         </p>
       )}
 

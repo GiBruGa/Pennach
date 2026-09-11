@@ -6,6 +6,7 @@ import Accueil from './pages/Accueil'
 import SelectionProfil from './pages/SelectionProfil'
 import Seance from './pages/Seance'
 import CarnetDeSuivi from './pages/CarnetDeSuivi'
+import EtapeDetail from './pages/EtapeDetail'
 import FicheProfil from './pages/FicheProfil'
 import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
@@ -13,13 +14,15 @@ import './App.css'
 function Contenu({ profil, changerProfil }: { profil: Profil; changerProfil: () => void }) {
   const [menuOuvert, setMenuOuvert] = useState(false)
   const location = useLocation()
-  // Le bandeau de menu est masqué pendant la séance en direct : la maquette prévoit
-  // que tout tienne dans la hauteur de l'écran en mode paysage, sans place à perdre.
+  // Le bandeau de l'appli (logo, Test Bluetooth, menu profil) ne vit que sur l'écran
+  // du Karned Heuliañ : partout ailleurs, un simple lien "Retour" y ramène (et donc,
+  // le cas échéant, au changement de profil depuis là).
+  const surListeCarnet = location.pathname === '/'
   const enSeance = location.pathname.startsWith('/seance/')
 
   return (
     <>
-      {!enSeance && (
+      {surListeCarnet && (
         <header className="entete">
           <Link to="/" className="titre" onClick={() => setMenuOuvert(false)}>
             Pennac'h
@@ -54,6 +57,7 @@ function Contenu({ profil, changerProfil }: { profil: Profil; changerProfil: () 
         <main className={enSeance ? 'main-seance' : undefined}>
           <Routes>
             <Route path="/" element={<CarnetDeSuivi />} />
+            <Route path="/etape/:planId/:etapeId" element={<EtapeDetail />} />
             <Route path="/fiche" element={<FicheProfil />} />
             <Route path="/seance/:planId/:etapeId" element={<Seance />} />
             <Route path="/test-bluetooth" element={<TestBluetooth />} />
