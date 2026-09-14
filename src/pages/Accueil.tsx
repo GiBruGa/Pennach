@@ -5,11 +5,20 @@ import QRCode from 'qrcode'
 // encodée en QR code sous le logo pour se passer facilement l'appli d'un téléphone à l'autre.
 const URL_APPLI = 'https://gibruga.github.io/Pennach/'
 
+// L'appli dépend du Web Bluetooth (liaison rameur/ceinture cardio), non supporté sous iOS —
+// tous les téléphones de la famille sont donc sous Android. On encode une intent URL Android
+// qui force l'ouverture avec Chrome (au lieu du navigateur par défaut du téléphone), avec un
+// repli sur l'URL normale si Chrome n'est pas installé.
+const URL_QR_CODE = `intent://${URL_APPLI.replace(
+  'https://',
+  '',
+)}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(URL_APPLI)};end`
+
 function CodePartage() {
   const [dataUrl, setDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    QRCode.toDataURL(URL_APPLI, { width: 160, margin: 1 })
+    QRCode.toDataURL(URL_QR_CODE, { width: 160, margin: 1 })
       .then(setDataUrl)
       .catch(() => {})
   }, [])
