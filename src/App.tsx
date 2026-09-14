@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HashRouter, Link, Route, Routes, useLocation } from 'react-router-dom'
+import QRCode from 'qrcode'
 import { ProfilProvider } from './context/ProfilContext'
 import { getProfil, getProfilActifId, oublierProfilActif, type Profil } from './lib/profil'
 import Accueil from './pages/Accueil'
@@ -11,6 +12,29 @@ import FicheProfil from './pages/FicheProfil'
 import Metoadou from './pages/Metoadou'
 import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
+
+// URL publique de l'appli (cf. vite.config.ts, base: '/Pennach/', servie sur GitHub Pages) —
+// encodée en QR code dans le menu avatar pour se passer facilement l'appli entre profils.
+const URL_APPLI = 'https://gibruga.github.io/Pennach/'
+
+function CodePartage() {
+  const [dataUrl, setDataUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    QRCode.toDataURL(URL_APPLI, { width: 160, margin: 1 })
+      .then(setDataUrl)
+      .catch(() => {})
+  }, [])
+
+  if (!dataUrl) return null
+
+  return (
+    <div className="code-partage">
+      <img src={dataUrl} alt="Code QR de l'appli Pennac'h" width={160} height={160} />
+      <span className="code-partage-legende">Scanner pour ouvrir Pennac'h</span>
+    </div>
+  )
+}
 
 function Contenu({ profil, changerProfil }: { profil: Profil; changerProfil: () => void }) {
   const [menuOuvert, setMenuOuvert] = useState(false)
@@ -44,6 +68,7 @@ function Contenu({ profil, changerProfil }: { profil: Profil; changerProfil: () 
           <Link to="/metoadou" onClick={() => setMenuOuvert(false)}>
             Metoadoù
           </Link>
+          <CodePartage />
           <button
             type="button"
             onClick={() => {
