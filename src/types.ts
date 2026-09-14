@@ -4,6 +4,8 @@ export interface ZoneKalon {
   libelle?: string // ex: "Zone 3"
 }
 
+export type RoleSection = 'echauffement' | 'effort' | 'recuperation' | 'retour'
+
 export interface Section {
   id: string
   dureeSecondes: number
@@ -11,6 +13,7 @@ export interface Section {
   tizh: number // cadence prévue, coups/min
   explication: string // max 200 caractères
   zoneKalon?: ZoneKalon // plage de fréquence cardiaque visée (constat, non asservie)
+  role: RoleSection // sert au résumé "avant séance" (nb d'efforts, durées effort/récup…)
 }
 
 export interface Programme {
@@ -57,7 +60,7 @@ export interface ParametresGeneration {
 export interface EtapeProgression {
   id: string
   numero: number
-  typeSession: string // ex: "Reiñ Bec'h" (HIIT) — seul type existant pour l'instant
+  typeSession: string // clé de TYPES_SEANCE (src/lib/typesEntrainement.ts), ex: "Koraiz Bihan"
   parametres: ParametresGeneration
   // Renseigné automatiquement à la fin de la séance liée (voir seanceId) :
   // Deiziad (date), Amzervezh (durée réelle), Pellder (distance), Energiezh (énergie)

@@ -79,6 +79,12 @@
   font-size: 0.9rem;
 }
 
+.aide-champ-fiche {
+  font-size: 0.75rem;
+  opacity: 0.65;
+  font-weight: 400;
+}
+
 .ligne-fiche-profil input,
 .ligne-fiche-profil select {
   padding: 6px;
@@ -87,6 +93,49 @@
   background: var(--bg);
   color: var(--text);
   font-size: 0.9rem;
+}
+
+.ecran-metoadou {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.carte-metoadou {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.carte-metoadou h2 {
+  margin: 0;
+}
+
+.metoadou-objectif {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.metoadou-methode {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.select-type-seance {
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 700;
+  font-size: inherit;
+  font-family: inherit;
 }
 
 .imc-affichage {
@@ -161,6 +210,152 @@ main.main-seance > * {
   align-self: flex-start;
   color: var(--text);
   opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+/* Fond noir très transparent : assombrit localement la photo pour que le texte clair
+   (var(--text)) reste lisible, à l'inverse du reste de cet écran qui passe en texte
+   sombre faute de panneau derrière (cf. règle ci-dessus). */
+.entete-avant-seance {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  padding: 8px 14px;
+  text-align: center;
+  color: var(--text);
+}
+
+.entete-avant-seance h1 {
+  margin: 0;
+}
+
+.devise-avant-seance {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* Traduction française sous un terme breton — demandé pour les filles de l'utilisateur.
+   Affichée uniquement sur la fiche de séance (EtapeDetail) et l'écran d'accueil de la
+   séance (Seance "avant"), jamais sur le Karned Heuliañ. */
+.traduction-fr {
+  display: block;
+  font-size: 0.65rem;
+  font-style: italic;
+  font-weight: 400;
+  color: #888;
+  opacity: 1;
+}
+
+.entete-avant-seance .traduction-fr {
+  margin: 0 0 4px;
+}
+
+.ecran-bilan-seance .carte-etape-detail {
+  width: min(97vw, 560px);
+  text-align: left;
+}
+
+/* Aperçu Nerzh/Tizh de l'écran "avant séance" : petit panneau clair posé sur la
+   photo de fond (qui n'a pas de panneau sombre, cf. règle ci-dessus), donc on
+   réutilise les teintes foncées des pastilles Nerzh/Tizh (et non les pastels clairs)
+   pour que les courbes restent lisibles. */
+.apercu-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(97vw, 560px);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  padding: 12px 14px;
+  backdrop-filter: blur(6px);
+}
+
+.apercu-resume {
+  font-size: 0.8rem;
+  color: #1a1a1a;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.apercu-resume p {
+  margin: 0;
+}
+
+.apercu-grandeur {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apercu-grandeur-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.apercu-grandeur-label {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.apercu-grandeur-plage {
+  font-size: 0.75rem;
+  color: #1a1a1a;
+  opacity: 0.7;
+}
+
+.graphique-parcours {
+  width: 100%;
+  height: 44px;
+  display: block;
+}
+
+/* Axe des temps partagé sous les 2 courbes : repères en minutes, ancrés à gauche/centre/
+   droite selon leur position pour ne jamais déborder du panneau. */
+.axe-temps-parcours {
+  position: relative;
+  height: 14px;
+  font-size: 0.7rem;
+  color: #1a1a1a;
+  opacity: 0.65;
+}
+
+.axe-temps-repere {
+  position: absolute;
+  top: 0;
+}
+
+.axe-temps-repere-debut {
+  transform: translateX(0);
+}
+
+.axe-temps-repere-milieu {
+  transform: translateX(-50%);
+}
+
+.axe-temps-repere-fin {
+  transform: translateX(-100%);
+}
+
+.axe-temps-unite {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-style: italic;
+}
+
+.actions-connexion-avant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.statut-connexion-ok {
+  color: var(--vert);
   font-size: 0.9rem;
 }
 
@@ -299,6 +494,8 @@ main.main-seance > * {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 8px;
   background: rgba(15, 27, 51, 0.9);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -321,6 +518,51 @@ main.main-seance > * {
   color: var(--text);
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+.actions-barre-titre-carnet {
+  display: flex;
+  gap: 8px;
+}
+
+.panneau-regeneration {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--bg-carte);
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.panneau-regeneration label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.panneau-regeneration input,
+.panneau-regeneration select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.estimation-regeneration {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.actions-regeneration {
+  display: flex;
+  gap: 8px;
 }
 
 /* Règle générale : toute cellule/valeur numérique reste centrée, où qu'elle apparaisse. */
@@ -454,6 +696,19 @@ main.main-seance > * {
 .pastille-pellder {
   background: #d9c3f0;
   color: #4a2d6b;
+}
+
+/* Kalon (fréquence cardiaque, ceinture Bluetooth) : rouge corail dédié, distinct du rose
+   Nerzh. En alerte (hors zone cible, dans un sens ou l'autre — pas de vert pour un
+   sous-régime, cf. retour utilisateur), bascule sur le rouge d'alerte de l'appli. */
+.pastille-kalon {
+  background: #f4a8a0;
+  color: #7a2416;
+}
+
+.pastille-kalon-alerte {
+  background: var(--rouge);
+  color: #fff;
 }
 
 /* Arabat Disoñjal : couleur chaude dédiée, distincte des pastilles ci-dessus — cf.
@@ -726,10 +981,6 @@ textarea.arabat-detail-champ {
 
 .cercle-tizh.cercle-rouge {
   background: var(--rouge);
-}
-
-.cercle-tizh.cercle-vert {
-  background: var(--vert);
 }
 
 .cercle-tizh.clignote {

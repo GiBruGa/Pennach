@@ -8,6 +8,7 @@ import Seance from './pages/Seance'
 import CarnetDeSuivi from './pages/CarnetDeSuivi'
 import EtapeDetail from './pages/EtapeDetail'
 import FicheProfil from './pages/FicheProfil'
+import Metoadou from './pages/Metoadou'
 import TestBluetooth from './pages/TestBluetooth'
 import './App.css'
 
@@ -40,6 +41,9 @@ function Contenu({ profil, changerProfil }: { profil: Profil; changerProfil: () 
           <Link to="/fiche" onClick={() => setMenuOuvert(false)}>
             Fiche
           </Link>
+          <Link to="/metoadou" onClick={() => setMenuOuvert(false)}>
+            Metoadoù
+          </Link>
           <button
             type="button"
             onClick={() => {
@@ -59,6 +63,7 @@ function Contenu({ profil, changerProfil }: { profil: Profil; changerProfil: () 
             <Route path="/" element={<CarnetDeSuivi />} />
             <Route path="/etape/:planId/:etapeId" element={<EtapeDetail />} />
             <Route path="/fiche" element={<FicheProfil />} />
+            <Route path="/metoadou" element={<Metoadou />} />
             <Route path="/seance/:planId/:etapeId" element={<Seance />} />
             <Route path="/test-bluetooth" element={<TestBluetooth />} />
           </Routes>

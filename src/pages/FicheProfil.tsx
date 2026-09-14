@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
 import {
+  calculerImc,
   enregistrerMesurePouez,
   listerMesuresPouez,
   mettreAJourProfil,
@@ -15,11 +16,6 @@ function aujourdhui(): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR')
-}
-
-function calculerImc(pouezKg: number, uhelderCm: number): number {
-  const uhelderM = uhelderCm / 100
-  return pouezKg / (uhelderM * uhelderM)
 }
 
 export default function FicheProfil() {
@@ -51,6 +47,7 @@ export default function FicheProfil() {
         dateNaissance: brouillon.dateNaissance,
         sexe: brouillon.sexe,
         uhelderCm: brouillon.uhelderCm,
+        frequenceCardiaqueReposBpm: brouillon.frequenceCardiaqueReposBpm,
       })
       majProfil(brouillon)
     } catch (e) {
@@ -116,6 +113,21 @@ export default function FicheProfil() {
               })
             }
           />
+        </label>
+        <label>
+          FC de repos (bpm)
+          <input
+            type="number"
+            min={1}
+            value={brouillon.frequenceCardiaqueReposBpm ?? ''}
+            onChange={(e) =>
+              setBrouillon({
+                ...brouillon,
+                frequenceCardiaqueReposBpm: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
+          />
+          <span className="aide-champ-fiche">Mesurée au réveil, avant de se lever</span>
         </label>
       </div>
       <button type="button" onClick={sauvegarderFiche} disabled={enregistrement}>

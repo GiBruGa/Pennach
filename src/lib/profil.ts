@@ -6,6 +6,12 @@ export interface Profil {
   dateNaissance?: string // ISO (YYYY-MM-DD) — Deiziad-ganedigezh
   sexe?: 'Gwaz' | 'Maouez' // Reizh
   uhelderCm?: number // Uhelder
+  frequenceCardiaqueReposBpm?: number // FC de repos, mesurée au réveil — utilisée par Karvonen
+}
+
+export function calculerImc(pouezKg: number, uhelderCm: number): number {
+  const uhelderM = uhelderCm / 100
+  return pouezKg / (uhelderM * uhelderM)
 }
 
 export interface MesurePouez {
@@ -17,7 +23,7 @@ export interface MesurePouez {
 
 const CLE_PROFIL_ACTIF = 'pennach_profil_actif_id'
 
-const COLONNES_PROFIL = 'id, nom, date_naissance, sexe, uhelder_cm'
+const COLONNES_PROFIL = 'id, nom, date_naissance, sexe, uhelder_cm, frequence_cardiaque_repos'
 
 function versProfil(ligne: {
   id: string
@@ -25,6 +31,7 @@ function versProfil(ligne: {
   date_naissance: string | null
   sexe: 'Gwaz' | 'Maouez' | null
   uhelder_cm: number | null
+  frequence_cardiaque_repos: number | null
 }): Profil {
   return {
     id: ligne.id,
@@ -32,6 +39,7 @@ function versProfil(ligne: {
     dateNaissance: ligne.date_naissance ?? undefined,
     sexe: ligne.sexe ?? undefined,
     uhelderCm: ligne.uhelder_cm ?? undefined,
+    frequenceCardiaqueReposBpm: ligne.frequence_cardiaque_repos ?? undefined,
   }
 }
 
@@ -57,7 +65,7 @@ export async function getProfil(id: string): Promise<Profil | null> {
 
 export async function mettreAJourProfil(
   id: string,
-  maj: Pick<Profil, 'dateNaissance' | 'sexe' | 'uhelderCm'>,
+  maj: Pick<Profil, 'dateNaissance' | 'sexe' | 'uhelderCm' | 'frequenceCardiaqueReposBpm'>,
 ): Promise<void> {
   const { error } = await supabase
     .from('profils')
@@ -65,6 +73,7 @@ export async function mettreAJourProfil(
       date_naissance: maj.dateNaissance ?? null,
       sexe: maj.sexe ?? null,
       uhelder_cm: maj.uhelderCm ?? null,
+      frequence_cardiaque_repos: maj.frequenceCardiaqueReposBpm ?? null,
     })
     .eq('id', id)
   if (error) throw error

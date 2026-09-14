@@ -203,3 +203,44 @@ export class RowerConnection {
     ])
   }
 }
+
+// Service Bluetooth "Heart Rate" standard (0x180D) : ceinture cardio (Polar H10 et
+// équivalents), indépendante du rameur — appairage séparé.
+const FLAG_FORMAT_UINT16 = 1 << 0
+
+export function parseFrequenceCardiaque(value: DataView): number {
+  const flags = value.getUint8(0)
+  return flags & FLAG_FORMAT_UINT16 ? value.getUint16(1, true) : value.getUint8(1)
+}
+
+export class HeartRateConnection {
+  private device: BluetoothDevice | null = null
+  private server: BluetoothRemoteGATTServer | null = null
+
+  async connect(): Promise<void> {
+    this.device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['heart_rate'] }],
+    })
+    this.server = await this.device.gatt!.connect()
+  }
+
+  disconnect(): void {
+    this.server?.disconnect()
+    this.device = null
+    this.server = null
+  }
+
+  get nomAppareil(): string | undefined {
+    return this.device?.name
+  }
+
+  async subscribe(onFrequence: (bpm: number) => void): Promise<void> {
+    const service = await this.server!.getPrimaryService('heart_rate')
+    const characteristic = await service.getCharacteristic('heart_rate_measurement')
+    characteristic.addEventListener('characteristicvaluechanged', () => {
+      const value = characteristic.value
+      if (value) onFrequence(parseFrequenceCardiaque(value))
+    })
+    await characteristic.startNotifications()
+  }
+}

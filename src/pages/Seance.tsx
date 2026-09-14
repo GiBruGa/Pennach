@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useProfil } from '../context/ProfilContext'
 import { getPlanProgression, saveSeance, savePlanProgression } from '../lib/storage'
-import { genererSections } from '../lib/generateur'
-import { RowerConnection } from '../lib/ble'
-import type { EtapeProgression, EvenementHistorique, PlanProgression, Programme } from '../types'
+import { TYPES_SEANCE } from '../lib/typesEntrainement'
+import { calculerKarvonen, type DonneesKarvonen } from '../lib/karvonen'
+import { TRADUCTIONS_GRANDEUR } from '../lib/lexique'
+import { HeartRateConnection, RowerConnection } from '../lib/ble'
+import type { EtapeProgression, EvenementHistorique, PlanProgression, Programme, RoleSection } from '../types'
 
 const COMPTE_A_REBOURS_MS = 10_000
 const STABILITE_NERZH_MS = 5_000
@@ -26,6 +28,110 @@ function formatHHMMSS(ms: number): string {
   return `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
 }
 
+// Résumé chiffré "avant séance" : s'appuie sur le rôle explicite de chaque section
+// (posé par le générateur, cf. typesEntrainement.ts) plutôt que de le redéviner depuis
+// les valeurs — un simple comptage de pics arrondi à l'entier ne suffit pas à distinguer
+// les paliers d'une montée continue (Reiñ Bec'h) de vraies alternances (Koraiz Bihan).
+// Les sections consécutives de même rôle sont d'abord regroupées en séquences logiques :
+// un Reiñ Bec'h découpé en tranches d'1 min doit compter comme 1 effort continu, pas N.
+function resumeSeance(sections: Programme['sections']) {
+  const sequences: { role: RoleSection; dureeSecondes: number }[] = []
+  for (const s of sections) {
+    const derniere = sequences[sequences.length - 1]
+    if (derniere && derniere.role === s.role) {
+      derniere.dureeSecondes += s.dureeSecondes
+    } else {
+      sequences.push({ role: s.role, dureeSecondes: s.dureeSecondes })
+    }
+  }
+  const efforts = sequences.filter((s) => s.role === 'effort')
+  const recups = sequences.filter((s) => s.role === 'recuperation')
+  const dureesEffort = efforts.map((s) => s.dureeSecondes)
+  const dureesRecup = recups.map((s) => s.dureeSecondes)
+  return {
+    nbEfforts: efforts.length,
+    dureeEffortMinSec: dureesEffort.length ? Math.min(...dureesEffort) : 0,
+    dureeEffortMaxSec: dureesEffort.length ? Math.max(...dureesEffort) : 0,
+    nbRecups: recups.length,
+    dureeRecupMinSec: dureesRecup.length ? Math.min(...dureesRecup) : 0,
+    dureeRecupMaxSec: dureesRecup.length ? Math.max(...dureesRecup) : 0,
+    dureeTotaleMin: Math.round(sections.reduce((a, s) => a + s.dureeSecondes, 0) / 60),
+  }
+}
+
+// Aperçu "avant séance" : courbe en escalier de la valeur (Nerzh ou Tizh) de chaque
+// section, largeur proportionnelle à sa durée — donne une vue d'ensemble du parcours
+// de la séance à venir sans faire tourner le décompte. La plage de valeurs (min–max)
+// est affichée à côté du libellé, et l'axe des temps est partagé entre les 2 courbes
+// (cf. AxeTemps) pour qu'on puisse lire directement à quel moment chaque phase tombe.
+function GraphiqueSections({
+  sections,
+  valeur,
+  couleur,
+}: {
+  sections: Programme['sections']
+  valeur: (s: Programme['sections'][number]) => number
+  couleur: string
+}) {
+  const largeur = 280
+  const hauteur = 44
+  const dureeTotale = sections.reduce((acc, s) => acc + s.dureeSecondes, 0) || 1
+  const valeurs = sections.map(valeur)
+  const min = Math.min(...valeurs)
+  const max = Math.max(...valeurs)
+  const marge = Math.max(1, (max - min) * 0.2)
+  const yMin = min - marge
+  const yMax = max + marge
+  const echelleY = (v: number) => hauteur - ((v - yMin) / (yMax - yMin)) * hauteur
+
+  let x = 0
+  const points: string[] = []
+  sections.forEach((s, i) => {
+    const y = echelleY(valeurs[i])
+    points.push(`${x},${y}`)
+    x += (s.dureeSecondes / dureeTotale) * largeur
+    points.push(`${x},${y}`)
+  })
+
+  return (
+    <svg viewBox={`0 0 ${largeur} ${hauteur}`} className="graphique-parcours" preserveAspectRatio="none">
+      <polyline points={points.join(' ')} fill="none" stroke={couleur} strokeWidth={2.5} strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+// Axe des temps partagé (mêmes repères pour les 2 courbes, puisqu'elles portent sur
+// les mêmes sections) : un repère toutes les 5 ou 10 min selon la durée totale.
+function AxeTemps({ sections }: { sections: Programme['sections'] }) {
+  const dureeTotaleMin = sections.reduce((acc, s) => acc + s.dureeSecondes, 0) / 60
+  const pas = dureeTotaleMin > 30 ? 10 : dureeTotaleMin > 15 ? 5 : 2
+  // Repères réguliers (0, pas, 2×pas…), sans en poser un trop près de la vraie fin —
+  // qui reçoit toujours son propre repère avec la durée réelle (souvent pas un multiple
+  // rond de `pas`, la dernière section absorbant le temps restant de la séance).
+  const reperes: number[] = [0]
+  for (let m = pas; m < dureeTotaleMin - pas * 0.4; m += pas) reperes.push(m)
+  reperes.push(dureeTotaleMin)
+
+  return (
+    <div className="axe-temps-parcours">
+      {reperes.map((m, i) => {
+        const pourcent = (m / dureeTotaleMin) * 100
+        const ancrage = i === 0 ? 'debut' : i === reperes.length - 1 ? 'fin' : 'milieu'
+        const valeur = Math.round(m)
+        return (
+          <span
+            key={i}
+            className={`axe-temps-repere axe-temps-repere-${ancrage}`}
+            style={{ left: `${pourcent}%` }}
+          >
+            {ancrage === 'fin' ? `${valeur} min` : valeur}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 function biper(frequence: number, dureeMs: number) {
   const ctx = new AudioContext()
   const osc = ctx.createOscillator()
@@ -36,14 +142,14 @@ function biper(frequence: number, dureeMs: number) {
   osc.onended = () => ctx.close()
 }
 
-function programmeDepuisEtape(plan: PlanProgression, etape: EtapeProgression): Programme {
+function programmeDepuisEtape(plan: PlanProgression, etape: EtapeProgression, karvonen: DonneesKarvonen): Programme {
   return {
     slot: etape.numero,
     nom: `${plan.nom} — Séance ${etape.numero}`,
     dureeTotaleSecondes: etape.parametres.dureeTotaleMinutes * 60,
     seuilEcartTizhPourcent: 15,
     signalSonoreTizh: false,
-    sections: genererSections(etape.parametres),
+    sections: TYPES_SEANCE[etape.typeSession].genererSections(etape.parametres, karvonen),
   }
 }
 
@@ -60,14 +166,19 @@ export default function Seance() {
   const [erreurChargement, setErreurChargement] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>('avant')
   const [connecte, setConnecte] = useState(false)
+  const [connecteKalon, setConnecteKalon] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const [tizhReel, setTizhReel] = useState(0)
   const [nerzhReel, setNerzhReel] = useState<number | null>(null)
+  const [kalonReel, setKalonReel] = useState<number | null>(null)
   const [sectionIndex, setSectionIndex] = useState(0)
   const [clignote, setClignote] = useState(false)
   const [maintenant, setMaintenant] = useState(() => Date.now())
+  const [etapeFinale, setEtapeFinale] = useState<EtapeProgression | null>(null)
+  const [remarquesBilan, setRemarquesBilan] = useState('')
 
   const ble = useRef(new RowerConnection())
+  const kalonBle = useRef(new HeartRateConnection())
   const debutCompteARebours = useRef(0)
   const debutSeanceRef = useRef(0)
   const debutSectionRef = useRef(0)
@@ -84,6 +195,13 @@ export default function Seance() {
   const segmentDebutEnergieRef = useRef(0)
   const tizhSommeRef = useRef(0)
   const tizhCompteRef = useRef(0)
+  const kalonSommeRef = useRef(0)
+  const kalonCompteRef = useRef(0)
+  // Respect de la plage Kalon sur l'ensemble de la séance (pas seulement le segment en
+  // cours) : un échantillon FC de plus, un échantillon "dans la plage" de plus si la FC
+  // reçue est dans la zone de la section active à cet instant. Sert au bilan de fin de séance.
+  const kalonEchantillonsTotalRef = useRef(0)
+  const kalonEchantillonsDansZoneRef = useRef(0)
 
   // Empêche l'écran de s'éteindre pendant la séance (décompte, en cours, pause) — sans
   // ça le téléphone se verrouille tout seul en pleine séance. Best-effort : silencieux
@@ -116,6 +234,8 @@ export default function Seance() {
     segmentRef.current = { debut, nerzh }
     tizhSommeRef.current = 0
     tizhCompteRef.current = 0
+    kalonSommeRef.current = 0
+    kalonCompteRef.current = 0
     segmentDebutDistanceRef.current = distanceMetresRef.current
     segmentDebutEnergieRef.current = energieKcalRef.current
   }
@@ -134,8 +254,9 @@ export default function Seance() {
       }
       setPlan(p)
       setEtape(e)
-      setProgramme(programmeDepuisEtape(p, e))
+      setProgramme(programmeDepuisEtape(p, e, calculerKarvonen(profil)))
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planId, etapeId])
 
   const sectionActuelle = programme?.sections[sectionIndex]
@@ -147,6 +268,8 @@ export default function Seance() {
     if (!segment || fin <= segment.debut) return
     const tizhMoyen =
       tizhCompteRef.current > 0 ? Math.round(tizhSommeRef.current / tizhCompteRef.current) : 0
+    const kalonMoyen =
+      kalonCompteRef.current > 0 ? Math.round(kalonSommeRef.current / kalonCompteRef.current) : undefined
     evenementsRef.current.push({
       type: segment.nerzh === planNerzh ? 'section_planifiee' : 'section_personnalisee',
       debut: segment.debut,
@@ -154,6 +277,7 @@ export default function Seance() {
       nerzh: segment.nerzh,
       tizhPrevu: planTizh,
       tizhReelMoyen: tizhMoyen,
+      frequenceCardiaqueMoyenne: kalonMoyen,
     })
   }, [])
 
@@ -218,6 +342,11 @@ export default function Seance() {
             ...plan,
             etapes: plan.etapes.map((e) => (e.id === etape.id ? etapeMaj : e)),
           })
+          // Le bilan (écran ci-dessous) affiche ces résultats et permet de compléter
+          // l'Arabat Disoñjal à chaud, avant de retourner au carnet.
+          setRemarquesBilan(etapeMaj.remarques ?? '')
+          setEtapeFinale(etapeMaj)
+          return
         }
       }
       navigate('/')
@@ -225,6 +354,17 @@ export default function Seance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [programme, profil.id, plan, etape, nerzhReel, clorreSegment, navigate],
   )
+
+  async function validerBilan() {
+    if (plan && etapeFinale) {
+      const etapeAvecRemarques = { ...etapeFinale, remarques: remarquesBilan }
+      await savePlanProgression({
+        ...plan,
+        etapes: plan.etapes.map((e) => (e.id === etapeAvecRemarques.id ? etapeAvecRemarques : e)),
+      })
+    }
+    navigate('/')
+  }
 
   useEffect(() => {
     if (phase === 'avant' || phase === 'fini') return
@@ -367,6 +507,29 @@ export default function Seance() {
     }
   }
 
+  // Ceinture cardio : appairage séparé et optionnel (cf. décision utilisateur) — la
+  // séance peut démarrer sans, si elle est oubliée ou refuse de s'appairer.
+  async function connecterKalon() {
+    setErreur(null)
+    try {
+      const conn = kalonBle.current
+      await conn.connect()
+      await conn.subscribe((bpm) => {
+        setKalonReel(bpm)
+        kalonSommeRef.current += bpm
+        kalonCompteRef.current += 1
+        const zone = sectionRef.current?.zoneKalon
+        if (zone) {
+          kalonEchantillonsTotalRef.current += 1
+          if (bpm >= zone.min && bpm <= zone.max) kalonEchantillonsDansZoneRef.current += 1
+        }
+      })
+      setConnecteKalon(true)
+    } catch (e) {
+      setErreur(String((e as Error).message ?? e))
+    }
+  }
+
   function demarrer() {
     debutCompteARebours.current = Date.now()
     setPhase('compte_a_rebours')
@@ -402,25 +565,96 @@ export default function Seance() {
       : 0
   const horsSeuil =
     programme !== null && Math.abs(ecartTizhPourcent) > (programme?.seuilEcartTizhPourcent ?? 15)
-  // Convention (à ajuster si besoin) : rouge = trop rapide, vert = trop lent.
-  const couleurCercle = !horsSeuil ? 'bleu' : ecartTizhPourcent > 0 ? 'rouge' : 'vert'
+  // Convention : rouge = hors seuil (trop rapide ou trop lent), bleu = dans le seuil.
+  // Le vert n'est pas pertinent pour signaler un sous-régime (cf. retour utilisateur) —
+  // même convention appliquée à la FC ci-dessous.
+  const couleurCercle = horsSeuil ? 'rouge' : 'bleu'
+  const horsZoneKalon =
+    kalonReel !== null &&
+    sectionActuelle?.zoneKalon !== undefined &&
+    (kalonReel > sectionActuelle.zoneKalon.max || kalonReel < sectionActuelle.zoneKalon.min)
 
   if (erreurChargement) return <p className="erreur">{erreurChargement}</p>
   if (!programme) return <p>Chargement…</p>
 
   if (phase === 'avant') {
+    const resume = resumeSeance(programme.sections)
     return (
       <div className="ecran-seance ecran-seance-avant">
         <Link to="/" className="lien-retour-carnet">
           ◀ Retour
         </Link>
-        <h1>{programme.nom}</h1>
+        <div className="entete-avant-seance">
+          <h1>{(etape && TYPES_SEANCE[etape.typeSession]?.nom) ?? programme.nom}</h1>
+          {etape && TYPES_SEANCE[etape.typeSession] && (
+            <>
+              <p className="traduction-fr">{TYPES_SEANCE[etape.typeSession].traductionNom}</p>
+              <p className="devise-avant-seance">{TYPES_SEANCE[etape.typeSession].sousTitre}</p>
+              <p className="traduction-fr">{TYPES_SEANCE[etape.typeSession].traductionSousTitre}</p>
+            </>
+          )}
+        </div>
+        <div className="apercu-sections">
+          <div className="apercu-resume">
+            <p>
+              {resume.nbEfforts} effort{resume.nbEfforts > 1 ? 's' : ''} de{' '}
+              {resume.dureeEffortMinSec === resume.dureeEffortMaxSec ? (
+                formatMMSS(resume.dureeEffortMinSec * 1000)
+              ) : (
+                <>
+                  {formatMMSS(resume.dureeEffortMinSec * 1000)} à {formatMMSS(resume.dureeEffortMaxSec * 1000)}
+                </>
+              )}
+              {resume.nbRecups > 0 && (
+                <>
+                  {' '}
+                  · récup de{' '}
+                  {resume.dureeRecupMinSec === resume.dureeRecupMaxSec ? (
+                    formatMMSS(resume.dureeRecupMinSec * 1000)
+                  ) : (
+                    <>
+                      {formatMMSS(resume.dureeRecupMinSec * 1000)} à {formatMMSS(resume.dureeRecupMaxSec * 1000)}
+                    </>
+                  )}
+                </>
+              )}
+            </p>
+            <p>{resume.dureeTotaleMin} min au total</p>
+          </div>
+          <div className="apercu-grandeur">
+            <div className="apercu-grandeur-entete">
+              <span className="apercu-grandeur-label pastille-nerzh">Nerzh</span>
+              <span className="apercu-grandeur-plage">
+                {Math.min(...programme.sections.map((s) => s.nerzh))}–
+                {Math.max(...programme.sections.map((s) => s.nerzh))}
+              </span>
+            </div>
+            <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Nerzh}</span>
+            <GraphiqueSections sections={programme.sections} valeur={(s) => s.nerzh} couleur="#5a1f27" />
+          </div>
+          <div className="apercu-grandeur">
+            <div className="apercu-grandeur-entete">
+              <span className="apercu-grandeur-label pastille-tizh">Tizh</span>
+              <span className="apercu-grandeur-plage">
+                {Math.min(...programme.sections.map((s) => s.tizh))}–
+                {Math.max(...programme.sections.map((s) => s.tizh))} Riw/min
+              </span>
+            </div>
+            <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Tizh}</span>
+            <GraphiqueSections sections={programme.sections} valeur={(s) => s.tizh} couleur="#26306b" />
+          </div>
+          <AxeTemps sections={programme.sections} />
+        </div>
         {erreur && <p className="erreur">{erreur}</p>}
-        {!connecte ? (
-          <button onClick={connecter}>Connecter le rameur</button>
-        ) : (
-          <button onClick={demarrer}>Démarrer</button>
-        )}
+        <div className="actions-connexion-avant">
+          {!connecte && <button onClick={connecter}>Connecter le rameur</button>}
+          {!connecteKalon ? (
+            <button onClick={connecterKalon}>Connecter la ceinture</button>
+          ) : (
+            <span className="statut-connexion-ok">Ceinture connectée ✓</span>
+          )}
+          {connecte && <button onClick={demarrer}>Démarrer</button>}
+        </div>
       </div>
     )
   }
@@ -434,7 +668,76 @@ export default function Seance() {
     )
   }
 
-  if (phase === 'fini') return <p>Séance enregistrée.</p>
+  if (phase === 'fini') {
+    if (!etapeFinale) return <p>Séance enregistrée.</p>
+    const pourcentageZoneKalon =
+      kalonEchantillonsTotalRef.current > 0
+        ? Math.round((kalonEchantillonsDansZoneRef.current / kalonEchantillonsTotalRef.current) * 100)
+        : null
+    return (
+      <div className="ecran-seance ecran-bilan-seance">
+        <h1>Bilan</h1>
+        <div className="carte-etape-detail">
+          <div className="liste-params-detail">
+            <div className="ligne-param-detail">
+              <span className="param-detail-label">Deiziad</span>
+              <span className="param-detail-valeur-simple">
+                {new Date(etapeFinale.dateRealisee!).toLocaleDateString('fr-FR')}
+              </span>
+            </div>
+            <div className="ligne-param-detail">
+              <span className="param-detail-label">Amzervezh</span>
+              <span className="param-detail-boite pastille-amzervezh">
+                {formatMMSS((etapeFinale.dureeReelleSecondes ?? 0) * 1000)}
+              </span>
+              <span className="param-detail-unite">min:ss</span>
+            </div>
+            <div className="ligne-param-detail">
+              <span className="param-detail-label">Pellder</span>
+              <span className="param-detail-boite pastille-pellder">
+                {etapeFinale.kmRealises !== undefined ? etapeFinale.kmRealises : '—'}
+              </span>
+              <span className="param-detail-unite">km</span>
+            </div>
+            <div className="ligne-param-detail">
+              <span className="param-detail-label">Energiezh</span>
+              <span className="param-detail-boite pastille-energiezh">
+                {etapeFinale.energieDepenseeKcal !== undefined ? etapeFinale.energieDepenseeKcal : '—'}
+              </span>
+              <span className="param-detail-unite">kcal</span>
+            </div>
+            {pourcentageZoneKalon !== null && (
+              <div className="ligne-param-detail">
+                <span className="param-detail-label">
+                  Kalon
+                  <span className="traduction-fr">Respect de la plage</span>
+                </span>
+                <span className="param-detail-boite pastille-kalon">{pourcentageZoneKalon}%</span>
+              </div>
+            )}
+          </div>
+
+          <div className="arabat-detail">
+            <div className="param-detail-label">
+              Arabat Disoñjal
+              <span className="traduction-fr">Ne pas oublier</span>
+            </div>
+            <textarea
+              className="arabat-detail-texte arabat-detail-champ"
+              value={remarquesBilan}
+              onChange={(e) => setRemarquesBilan(e.target.value)}
+            />
+          </div>
+
+          <div className="actions-detail">
+            <button type="button" onClick={validerBilan}>
+              Terminer
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="ecran-seance ecran-seance-en-cours">
@@ -483,6 +786,14 @@ export default function Seance() {
             <span className="ligne-valeur-label">Energiezh</span>
             <span className="ligne-valeur-boite pastille-energiezh">{energiezhSectionKcal}</span>
             <span className="ligne-valeur-unite">kcal</span>
+
+            <span className="ligne-valeur-label">Kalon</span>
+            <span
+              className={`ligne-valeur-boite pastille-kalon ${horsZoneKalon ? 'pastille-kalon-alerte' : ''}`}
+            >
+              {kalonReel ?? '—'}
+            </span>
+            <span className="ligne-valeur-unite">bpm</span>
           </div>
         </div>
 

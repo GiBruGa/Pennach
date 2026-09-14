@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getPlanProgression, savePlanProgression } from '../lib/storage'
+import { TYPES_SEANCE } from '../lib/typesEntrainement'
+import { TRADUCTIONS_GRANDEUR } from '../lib/lexique'
 import type { EtapeProgression, PlanProgression } from '../types'
 
 function formatDeiziad(ts?: number): string {
@@ -76,7 +78,21 @@ export default function EtapeDetail() {
         <div className="carte-etape-entete">
           <span>
             No. <strong>{brouillon.numero}</strong>&nbsp;&nbsp;&nbsp;Type{' '}
-            <strong>{brouillon.typeSession}</strong>
+            {realisee ? (
+              <strong>{brouillon.typeSession}</strong>
+            ) : (
+              <select
+                className="select-type-seance"
+                value={brouillon.typeSession}
+                onChange={(e) => setBrouillon({ ...brouillon, typeSession: e.target.value })}
+              >
+                {Object.keys(TYPES_SEANCE).map((cle) => (
+                  <option key={cle} value={cle}>
+                    {cle}
+                  </option>
+                ))}
+              </select>
+            )}
           </span>
         </div>
         {estProchaine && <span className="badge-prochaine">Prochaine Séance</span>}
@@ -84,7 +100,10 @@ export default function EtapeDetail() {
 
         <div className="liste-params-detail">
           <div className="ligne-param-detail">
-            <span className="param-detail-label">Nerzh</span>
+            <span className="param-detail-label">
+              Nerzh
+              <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Nerzh}</span>
+            </span>
             {realisee ? (
               <span className="param-detail-boite pastille-nerzh">{brouillon.parametres.puissance}</span>
             ) : (
@@ -104,7 +123,10 @@ export default function EtapeDetail() {
             )}
           </div>
           <div className="ligne-param-detail">
-            <span className="param-detail-label">Tizh</span>
+            <span className="param-detail-label">
+              Tizh
+              <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Tizh}</span>
+            </span>
             {realisee ? (
               <span className="param-detail-boite pastille-tizh">{brouillon.parametres.rythme}</span>
             ) : (
@@ -124,7 +146,10 @@ export default function EtapeDetail() {
             )}
           </div>
           <div className="ligne-param-detail">
-            <span className="param-detail-label">Adnerzhañ</span>
+            <span className="param-detail-label">
+              Adnerzhañ
+              <span className="traduction-fr">{TRADUCTIONS_GRANDEUR['Adnerzhañ']}</span>
+            </span>
             {realisee ? (
               <span className="param-detail-boite pastille-adnerzhan">
                 {brouillon.parametres.recuperation}
@@ -146,7 +171,10 @@ export default function EtapeDetail() {
             )}
           </div>
           <div className="ligne-param-detail">
-            <span className="param-detail-label">Padelezh</span>
+            <span className="param-detail-label">
+              Padelezh
+              <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Padelezh}</span>
+            </span>
             {realisee ? (
               <span className="param-detail-boite pastille-padelezh">
                 {brouillon.parametres.dureeTotaleMinutes}
@@ -170,7 +198,10 @@ export default function EtapeDetail() {
         </div>
 
         <div className="arabat-detail">
-          <div className="param-detail-label">Arabat Disoñjal</div>
+          <div className="param-detail-label">
+            Arabat Disoñjal
+            <span className="traduction-fr">{TRADUCTIONS_GRANDEUR['Arabat Disoñjal']}</span>
+          </div>
           {realisee ? (
             <div className="arabat-detail-texte">{brouillon.remarques || '—'}</div>
           ) : (
