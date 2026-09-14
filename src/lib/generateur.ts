@@ -24,15 +24,22 @@ function nerzhPour(type: TypeSection, puissance: number): number {
   }
 }
 
+// Cadence de pointe (section "effort") : le paramètre Tizh (1-10) déplace toute la
+// courbe, de 26 coups/min (rythme=1) à 36 coups/min (rythme=10) — cf. retour terrain
+// du 2026-09-14 (échelle initiale bien trop basse pour un rameur entraîné). L'amplitude
+// entre le pic et le creux de la séance est plafonnée à 10 coups/min, et le creux ne
+// descend jamais sous 20 coups/min.
 function tizhPour(type: TypeSection, rythme: number): number {
+  const pic = 26 + (rythme - 1) * (10 / 9)
+  const amplitude = Math.min(10, pic - 20)
   switch (type) {
+    case 'effort':
+      return Math.round(pic)
     case 'echauffement':
     case 'recuperation':
-      return Math.round(16 + (rythme - 1) * 0.9)
-    case 'effort':
-      return Math.round(22 + (rythme - 1) * 1.6)
+      return Math.round(pic - amplitude / 2)
     case 'retour':
-      return Math.round(14 + (rythme - 1) * 0.4)
+      return Math.round(pic - amplitude)
   }
 }
 

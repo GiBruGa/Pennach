@@ -85,6 +85,33 @@ export default function Seance() {
   const tizhSommeRef = useRef(0)
   const tizhCompteRef = useRef(0)
 
+  // Empêche l'écran de s'éteindre pendant la séance (décompte, en cours, pause) — sans
+  // ça le téléphone se verrouille tout seul en pleine séance. Best-effort : silencieux
+  // si l'API n'est pas supportée, et se ré-acquiert si l'onglet reprend la main après
+  // avoir perdu le focus (le verrou est relâché automatiquement dans ce cas).
+  useEffect(() => {
+    if (phase !== 'compte_a_rebours' && phase !== 'en_cours' && phase !== 'pause') return
+    let verrou: WakeLockSentinel | null = null
+    async function demanderVeille() {
+      try {
+        if ('wakeLock' in navigator) {
+          verrou = await navigator.wakeLock.request('screen')
+        }
+      } catch {
+        // Refus du navigateur (économie d'énergie, permissions…) : pas bloquant.
+      }
+    }
+    demanderVeille()
+    function surChangementVisibilite() {
+      if (document.visibilityState === 'visible' && !verrou) demanderVeille()
+    }
+    document.addEventListener('visibilitychange', surChangementVisibilite)
+    return () => {
+      document.removeEventListener('visibilitychange', surChangementVisibilite)
+      verrou?.release().catch(() => {})
+    }
+  }, [phase])
+
   function demarrerNouveauSegment(nerzh: number, debut: number) {
     segmentRef.current = { debut, nerzh }
     tizhSommeRef.current = 0
