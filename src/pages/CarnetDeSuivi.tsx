@@ -4,7 +4,7 @@ import { useProfil } from '../context/ProfilContext'
 import { getOuCreerCarnet, savePlanProgression } from '../lib/storage'
 import { TYPES_SEANCE } from '../lib/typesEntrainement'
 import { listerMesuresPouez } from '../lib/profil'
-import { genererProgression20Seances } from '../lib/progression'
+import { dureeObjectifParDefaut, genererProgression20Seances } from '../lib/progression'
 import type { EtapeProgression, PlanProgression } from '../types'
 
 function nouvelleEtape(numero: number): EtapeProgression {
@@ -22,7 +22,8 @@ export default function CarnetDeSuivi() {
   const [carnet, setCarnet] = useState<PlanProgression | null>(null)
   const [panneauRegenOuvert, setPanneauRegenOuvert] = useState(false)
   const [typeRegen, setTypeRegen] = useState(Object.keys(TYPES_SEANCE)[0])
-  const [dureeRegen, setDureeRegen] = useState(45)
+  const [dureeMiniRegen, setDureeMiniRegen] = useState(45)
+  const [dureeObjectifRegen, setDureeObjectifRegen] = useState(() => dureeObjectifParDefaut(45))
   const [frequenceRegen, setFrequenceRegen] = useState(3)
   const [regenerationEnCours, setRegenerationEnCours] = useState(false)
   const [erreurRegen, setErreurRegen] = useState<string | null>(null)
@@ -70,7 +71,8 @@ export default function CarnetDeSuivi() {
         type: typeRegen,
         profil,
         dernierePouezKg,
-        dureeMinutes: dureeRegen,
+        dureeMiniMinutes: dureeMiniRegen,
+        dureeObjectifMinutes: dureeObjectifRegen,
       })
       const etapes = [...realisees, ...nouvelles].map((e, i) => ({ ...e, numero: i + 1 }))
       const carnetMaj = { ...carnet, etapes }
@@ -111,14 +113,24 @@ export default function CarnetDeSuivi() {
             </select>
           </label>
           <label>
-            Durée par séance
+            Durée mini
             <input
               type="number"
               min={1}
-              value={dureeRegen}
-              onChange={(e) => setDureeRegen(Number(e.target.value))}
+              value={dureeMiniRegen}
+              onChange={(e) => setDureeMiniRegen(Number(e.target.value))}
             />
-            <span className="aide-champ-fiche">min</span>
+            <span className="aide-champ-fiche">min — toujours atteignable, même les jours chargés</span>
+          </label>
+          <label>
+            Durée objectif
+            <input
+              type="number"
+              min={dureeMiniRegen}
+              value={dureeObjectifRegen}
+              onChange={(e) => setDureeObjectifRegen(Number(e.target.value))}
+            />
+            <span className="aide-champ-fiche">min — visée en fin de programme (suggestion : mini + 15, jusqu'à 75)</span>
           </label>
           <label>
             Fréquence visée

@@ -144,6 +144,7 @@
 
 .ligne-nouvelle-mesure {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 }
@@ -154,6 +155,16 @@
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
+  min-width: 0;
+}
+
+.ligne-nouvelle-mesure input[type='date'] {
+  flex: 1 1 140px;
+}
+
+.ligne-nouvelle-mesure input[type='number'] {
+  width: 5em;
+  flex: 0 0 auto;
 }
 
 .liste-mesures-pouez {
@@ -246,8 +257,15 @@ main.main-seance > * {
   opacity: 1;
 }
 
+/* Le gris standard (#888) devient illisible ici : le fond très transparent laisse
+   passer des zones claires de la photo, et un gris moyen n'a de contraste fiable ni
+   sur clair ni sur foncé. On reprend donc le texte clair de l'écran (var(--text)),
+   atténué, avec une ombre portée pour garder un minimum de lisibilité quel que soit
+   l'endroit de la photo derrière. */
 .entete-avant-seance .traduction-fr {
   margin: 0 0 4px;
+  color: rgba(233, 237, 245, 0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .ecran-bilan-seance .carte-etape-detail {
@@ -285,12 +303,6 @@ main.main-seance > * {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.apercu-grandeur-entete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .apercu-grandeur-label {

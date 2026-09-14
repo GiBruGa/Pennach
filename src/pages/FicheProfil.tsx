@@ -9,6 +9,7 @@ import {
   type MesurePouez,
   type Profil,
 } from '../lib/profil'
+import { TRADUCTIONS_PROFIL } from '../lib/lexique'
 
 function aujourdhui(): string {
   return new Date().toISOString().slice(0, 10)
@@ -81,6 +82,7 @@ export default function FicheProfil() {
       <div className="ligne-fiche-profil">
         <label>
           Deiziad-ganedigezh
+          <span className="traduction-fr">{TRADUCTIONS_PROFIL['Deiziad-ganedigezh']}</span>
           <input
             type="date"
             value={brouillon.dateNaissance ?? ''}
@@ -89,6 +91,7 @@ export default function FicheProfil() {
         </label>
         <label>
           Reizh
+          <span className="traduction-fr">{TRADUCTIONS_PROFIL.Reizh}</span>
           <select
             value={brouillon.sexe ?? ''}
             onChange={(e) =>
@@ -96,12 +99,13 @@ export default function FicheProfil() {
             }
           >
             <option value="">—</option>
-            <option value="Maouez">Maouez</option>
-            <option value="Gwaz">Gwaz</option>
+            <option value="Maouez">Maouez (Femme)</option>
+            <option value="Gwaz">Gwaz (Homme)</option>
           </select>
         </label>
         <label>
-          Uhelder (cm)
+          Uhelder
+          <span className="traduction-fr">{TRADUCTIONS_PROFIL.Uhelder}</span>
           <input
             type="number"
             min={1}
@@ -115,7 +119,8 @@ export default function FicheProfil() {
           />
         </label>
         <label>
-          FC de repos (bpm)
+          Frekañs ar galon en diskuizh
+          <span className="traduction-fr">{TRADUCTIONS_PROFIL['Frekañs ar galon en diskuizh']}</span>
           <input
             type="number"
             min={1}
@@ -134,9 +139,10 @@ export default function FicheProfil() {
         Sauvegarder
       </button>
 
-      <hr />
-
-      <h2>Pouez</h2>
+      <h2>
+        Pouez
+        <span className="traduction-fr">{TRADUCTIONS_PROFIL.Pouez}</span>
+      </h2>
       {imc !== null && (
         <p className="imc-affichage">
           IMC <strong>{imc.toFixed(1)}</strong>
@@ -162,15 +168,19 @@ export default function FicheProfil() {
         </button>
       </div>
 
-      <ul className="liste-mesures-pouez">
-        {[...mesures]
-          .reverse()
-          .map((m) => (
-            <li key={m.id}>
-              {formatDate(m.date)} — {m.pouezKg} kg
-            </li>
-          ))}
-      </ul>
+      {mesures.length === 0 ? (
+        <p className="aide-champ-fiche">Aucune mesure enregistrée pour l'instant.</p>
+      ) : (
+        <ul className="liste-mesures-pouez">
+          {[...mesures]
+            .reverse()
+            .map((m) => (
+              <li key={m.id}>
+                {formatDate(m.date)} — {m.pouezKg} kg
+              </li>
+            ))}
+        </ul>
+      )}
     </div>
   )
 }

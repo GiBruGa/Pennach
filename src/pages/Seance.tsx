@@ -622,24 +622,20 @@ export default function Seance() {
             <p>{resume.dureeTotaleMin} min au total</p>
           </div>
           <div className="apercu-grandeur">
-            <div className="apercu-grandeur-entete">
-              <span className="apercu-grandeur-label pastille-nerzh">Nerzh</span>
-              <span className="apercu-grandeur-plage">
-                {Math.min(...programme.sections.map((s) => s.nerzh))}–
-                {Math.max(...programme.sections.map((s) => s.nerzh))}
-              </span>
-            </div>
+            <span className="apercu-grandeur-label pastille-nerzh">Nerzh</span>
+            <span className="apercu-grandeur-plage">
+              {Math.min(...programme.sections.map((s) => s.nerzh))}–
+              {Math.max(...programme.sections.map((s) => s.nerzh))}
+            </span>
             <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Nerzh}</span>
             <GraphiqueSections sections={programme.sections} valeur={(s) => s.nerzh} couleur="#5a1f27" />
           </div>
           <div className="apercu-grandeur">
-            <div className="apercu-grandeur-entete">
-              <span className="apercu-grandeur-label pastille-tizh">Tizh</span>
-              <span className="apercu-grandeur-plage">
-                {Math.min(...programme.sections.map((s) => s.tizh))}–
-                {Math.max(...programme.sections.map((s) => s.tizh))} Riw/min
-              </span>
-            </div>
+            <span className="apercu-grandeur-label pastille-tizh">Tizh</span>
+            <span className="apercu-grandeur-plage">
+              {Math.min(...programme.sections.map((s) => s.tizh))}–
+              {Math.max(...programme.sections.map((s) => s.tizh))} Riw/min
+            </span>
             <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Tizh}</span>
             <GraphiqueSections sections={programme.sections} valeur={(s) => s.tizh} couleur="#26306b" />
           </div>
@@ -680,27 +676,39 @@ export default function Seance() {
         <div className="carte-etape-detail">
           <div className="liste-params-detail">
             <div className="ligne-param-detail">
-              <span className="param-detail-label">Deiziad</span>
+              <span className="param-detail-label">
+                Deiziad
+                <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Deiziad}</span>
+              </span>
               <span className="param-detail-valeur-simple">
                 {new Date(etapeFinale.dateRealisee!).toLocaleDateString('fr-FR')}
               </span>
             </div>
             <div className="ligne-param-detail">
-              <span className="param-detail-label">Amzervezh</span>
+              <span className="param-detail-label">
+                Amzervezh
+                <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Amzervezh}</span>
+              </span>
               <span className="param-detail-boite pastille-amzervezh">
                 {formatMMSS((etapeFinale.dureeReelleSecondes ?? 0) * 1000)}
               </span>
               <span className="param-detail-unite">min:ss</span>
             </div>
             <div className="ligne-param-detail">
-              <span className="param-detail-label">Pellder</span>
+              <span className="param-detail-label">
+                Pellder
+                <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Pellder}</span>
+              </span>
               <span className="param-detail-boite pastille-pellder">
                 {etapeFinale.kmRealises !== undefined ? etapeFinale.kmRealises : '—'}
               </span>
               <span className="param-detail-unite">km</span>
             </div>
             <div className="ligne-param-detail">
-              <span className="param-detail-label">Energiezh</span>
+              <span className="param-detail-label">
+                Energiezh
+                <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Energiezh}</span>
+              </span>
               <span className="param-detail-boite pastille-energiezh">
                 {etapeFinale.energieDepenseeKcal !== undefined ? etapeFinale.energieDepenseeKcal : '—'}
               </span>

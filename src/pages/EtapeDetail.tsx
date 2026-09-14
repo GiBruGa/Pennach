@@ -219,25 +219,37 @@ export default function EtapeDetail() {
             <div className="titre-resultats-detail">Résultats</div>
             <div className="liste-params-detail">
               <div className="ligne-param-detail">
-                <span className="param-detail-label">Deiziad</span>
+                <span className="param-detail-label">
+                  Deiziad
+                  <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Deiziad}</span>
+                </span>
                 <span className="param-detail-valeur-simple">{formatDeiziad(brouillon.dateRealisee)}</span>
               </div>
               <div className="ligne-param-detail">
-                <span className="param-detail-label">Amzervezh</span>
+                <span className="param-detail-label">
+                  Amzervezh
+                  <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Amzervezh}</span>
+                </span>
                 <span className="param-detail-boite pastille-amzervezh">
                   {formatAmzervezh(brouillon.dureeReelleSecondes)}
                 </span>
                 <span className="param-detail-unite">min:ss</span>
               </div>
               <div className="ligne-param-detail">
-                <span className="param-detail-label">Pellder</span>
+                <span className="param-detail-label">
+                  Pellder
+                  <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Pellder}</span>
+                </span>
                 <span className="param-detail-boite pastille-pellder">
                   {brouillon.kmRealises !== undefined ? brouillon.kmRealises : '—'}
                 </span>
                 <span className="param-detail-unite">km</span>
               </div>
               <div className="ligne-param-detail">
-                <span className="param-detail-label">Energiezh</span>
+                <span className="param-detail-label">
+                  Energiezh
+                  <span className="traduction-fr">{TRADUCTIONS_GRANDEUR.Energiezh}</span>
+                </span>
                 <span className="param-detail-boite pastille-energiezh">
                   {brouillon.energieDepenseeKcal !== undefined ? brouillon.energieDepenseeKcal : '—'}
                 </span>

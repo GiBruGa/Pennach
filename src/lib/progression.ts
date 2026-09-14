@@ -20,29 +20,45 @@ const TAILLES_BLOCS = [7, 7, 6] // adaptation / développement / intensification
 // réellement disponible et garde 3 paliers distincts tant qu'il reste de la marge.
 const FRACTIONS_BLOCS = [0, 0.5, 1]
 const ADNERZHAN_PROGRESSION = 6 // stable sur les 20 séances : pas de signal clair pour le faire varier
-const DUREE_PAR_DEFAUT_MIN = 45
+const DUREE_MINI_PAR_DEFAUT_MIN = 45
+const DUREE_OBJECTIF_ECART_MIN = 15 // objectif par défaut = mini + 15 min…
+const DUREE_OBJECTIF_PLAFOND_MIN = 75 // …plafonné à 75 min (au-delà, peu de bénéfice
+// supplémentaire pour un usage récréatif, et risque d'abandon/surmenage plus élevé — cf.
+// discussion utilisateur sur l'équilibre entre progression efficace et temps disponible).
+
+// Objectif de durée par défaut si non précisé : un peu plus long que la durée mini,
+// sans dépasser un plafond raisonnable.
+export function dureeObjectifParDefaut(dureeMiniMinutes: number): number {
+  return Math.min(DUREE_OBJECTIF_PLAFOND_MIN, dureeMiniMinutes + DUREE_OBJECTIF_ECART_MIN)
+}
 
 export interface OptionsProgression {
   type: string // clé de TYPES_SEANCE
   profil: Profil
   dernierePouezKg?: number
-  dureeMinutes?: number
+  dureeMiniMinutes?: number
+  dureeObjectifMinutes?: number
 }
 
 // Génère 20 séances calibrées sur l'indice corporel du profil, en 3 blocs progressifs.
-// Nerzh et Tizh montent ensemble par palier de bloc (plafonnés à 10) ; Adnerzhañ et la
-// durée restent constants sur les 20 séances.
+// Nerzh, Tizh et la durée montent ensemble par palier de bloc — la durée progresse de
+// dureeMiniMinutes (toujours atteignable) vers dureeObjectifMinutes (objectif), sur le
+// même principe que la résistance/cadence, plutôt que de rester fixe sur les 20 séances.
+// Adnerzhañ reste stable.
 export function genererProgression20Seances(opts: OptionsProgression): Omit<EtapeProgression, 'numero'>[] {
   const imc =
     opts.dernierePouezKg && opts.profil.uhelderCm
       ? calculerImc(opts.dernierePouezKg, opts.profil.uhelderCm)
       : IMC_PAR_DEFAUT
   const niveauDepart = niveauDepartDepuisImc(imc)
-  const dureeTotaleMinutes = opts.dureeMinutes ?? DUREE_PAR_DEFAUT_MIN
+  const dureeMini = opts.dureeMiniMinutes ?? DUREE_MINI_PAR_DEFAUT_MIN
+  const dureeObjectif = opts.dureeObjectifMinutes ?? dureeObjectifParDefaut(dureeMini)
 
   const etapes: Omit<EtapeProgression, 'numero'>[] = []
   TAILLES_BLOCS.forEach((taille, bloc) => {
-    const niveau = Math.round(niveauDepart + FRACTIONS_BLOCS[bloc] * (10 - niveauDepart))
+    const fraction = FRACTIONS_BLOCS[bloc]
+    const niveau = Math.round(niveauDepart + fraction * (10 - niveauDepart))
+    const dureeTotaleMinutes = Math.round(dureeMini + fraction * (dureeObjectif - dureeMini))
     for (let i = 0; i < taille; i++) {
       etapes.push({
         id: crypto.randomUUID(),
