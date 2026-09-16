@@ -182,7 +182,8 @@ export default function EtapeDetail() {
             ) : (
               <input
                 type="number"
-                min={1}
+                min={25}
+                max={75}
                 className="param-detail-boite pastille-padelezh"
                 value={brouillon.parametres.dureeTotaleMinutes}
                 onChange={(e) =>

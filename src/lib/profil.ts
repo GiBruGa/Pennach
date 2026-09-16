@@ -7,6 +7,7 @@ export interface Profil {
   sexe?: 'Gwaz' | 'Maouez' // Reizh
   uhelderCm?: number // Uhelder
   frequenceCardiaqueReposBpm?: number // FC de repos, mesurée au réveil — utilisée par Karvonen
+  email?: string // sert de compte Supabase Auth pour protéger la Fiche (cf. ProtectionFiche.tsx)
 }
 
 export function calculerImc(pouezKg: number, uhelderCm: number): number {
@@ -14,16 +15,30 @@ export function calculerImc(pouezKg: number, uhelderCm: number): number {
   return pouezKg / (uhelderM * uhelderM)
 }
 
+export function calculerAge(dateNaissanceIso: string): number {
+  const naissance = new Date(dateNaissanceIso)
+  const auj = new Date()
+  let age = auj.getFullYear() - naissance.getFullYear()
+  const avantAnniversaire =
+    auj.getMonth() < naissance.getMonth() ||
+    (auj.getMonth() === naissance.getMonth() && auj.getDate() < naissance.getDate())
+  if (avantAnniversaire) age--
+  return age
+}
+
 export interface MesurePouez {
   id: string
   profilId: string
   date: string // ISO (YYYY-MM-DD)
   pouezKg: number
+  tourTailleCm?: number
+  pourcentageMasseGrasse?: number
+  pourcentageMasseMusculaire?: number
 }
 
 const CLE_PROFIL_ACTIF = 'pennach_profil_actif_id'
 
-const COLONNES_PROFIL = 'id, nom, date_naissance, sexe, uhelder_cm, frequence_cardiaque_repos'
+const COLONNES_PROFIL = 'id, nom, date_naissance, sexe, uhelder_cm, frequence_cardiaque_repos, email'
 
 function versProfil(ligne: {
   id: string
@@ -32,6 +47,7 @@ function versProfil(ligne: {
   sexe: 'Gwaz' | 'Maouez' | null
   uhelder_cm: number | null
   frequence_cardiaque_repos: number | null
+  email: string | null
 }): Profil {
   return {
     id: ligne.id,
@@ -40,6 +56,7 @@ function versProfil(ligne: {
     sexe: ligne.sexe ?? undefined,
     uhelderCm: ligne.uhelder_cm ?? undefined,
     frequenceCardiaqueReposBpm: ligne.frequence_cardiaque_repos ?? undefined,
+    email: ligne.email ?? undefined,
   }
 }
 

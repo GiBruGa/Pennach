@@ -116,17 +116,19 @@ export default function CarnetDeSuivi() {
             Durée mini
             <input
               type="number"
-              min={1}
+              min={25}
+              max={75}
               value={dureeMiniRegen}
               onChange={(e) => setDureeMiniRegen(Number(e.target.value))}
             />
-            <span className="aide-champ-fiche">min — toujours atteignable, même les jours chargés</span>
+            <span className="aide-champ-fiche">min — toujours atteignable, même les jours chargés (25 à 75)</span>
           </label>
           <label>
             Durée objectif
             <input
               type="number"
               min={dureeMiniRegen}
+              max={75}
               value={dureeObjectifRegen}
               onChange={(e) => setDureeObjectifRegen(Number(e.target.value))}
             />

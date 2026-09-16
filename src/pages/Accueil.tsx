@@ -9,7 +9,7 @@ function CodePartage() {
   const [dataUrl, setDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    QRCode.toDataURL(URL_APPLI, { width: 160, margin: 1 })
+    QRCode.toDataURL(URL_APPLI, { width: 110, margin: 1 })
       .then(setDataUrl)
       .catch(() => {})
   }, [])
@@ -18,7 +18,7 @@ function CodePartage() {
 
   return (
     <div className="code-partage">
-      <img src={dataUrl} alt="Code QR de l'appli Pennac'h" width={160} height={160} />
+      <img src={dataUrl} alt="Code QR de l'appli Pennac'h" width={110} height={110} />
       <span className="code-partage-legende">Scanner pour ouvrir Pennac'h</span>
     </div>
   )
@@ -32,10 +32,10 @@ export default function Accueil({ onCommencer }: { onCommencer: () => void }) {
         alt="Pennac'h"
         className="logo-accueil"
       />
-      <CodePartage />
       <button type="button" className="bouton-commencer" onClick={onCommencer}>
         Commencer
       </button>
+      <CodePartage />
       <p className="mentions-legales">
         Ceci est une application offerte par Gilles Brun Gautier'h, tous droits réservés
       </p>

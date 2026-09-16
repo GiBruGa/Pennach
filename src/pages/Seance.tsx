@@ -28,6 +28,27 @@ function formatHHMMSS(ms: number): string {
   return `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
 }
 
+// Certaines étapes de l'appairage Bluetooth peuvent rester bloquées sans jamais rejeter
+// leur promesse (ex. le rameur n'envoie jamais la notification de réponse attendue par
+// prendreLeControle) : le bouton "Connecter" semblait alors juste se réinitialiser sans
+// aucun message. Ce délai transforme un blocage silencieux en erreur explicite et datée,
+// que l'utilisateur peut relayer pour diagnostiquer ce qui s'est réellement passé.
+function avecDelai<T>(promesse: Promise<T>, delaiMs: number, messageDelai: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(messageDelai)), delaiMs)
+    promesse.then(
+      (v) => {
+        clearTimeout(id)
+        resolve(v)
+      },
+      (e) => {
+        clearTimeout(id)
+        reject(e)
+      },
+    )
+  })
+}
+
 // Résumé chiffré "avant séance" : s'appuie sur le rôle explicite de chaque section
 // (posé par le générateur, cf. typesEntrainement.ts) plutôt que de le redéviner depuis
 // les valeurs — un simple comptage de pics arrondi à l'entier ne suffit pas à distinguer
@@ -260,7 +281,6 @@ export default function Seance() {
   }, [planId, etapeId])
 
   const sectionActuelle = programme?.sections[sectionIndex]
-  const sectionSuivante = programme?.sections[sectionIndex + 1]
   sectionRef.current = sectionActuelle
 
   const clorreSegment = useCallback((fin: number, planNerzh: number, planTizh: number) => {
@@ -389,13 +409,17 @@ export default function Seance() {
 
   useEffect(() => {
     if (phase !== 'en_cours' || !programme || !sectionActuelle) return
-    // La dernière section n'a pas de fin automatique : elle continue d'enregistrer
-    // jusqu'à l'arrêt manuel de la séance.
     const estDerniereSection = sectionIndex + 1 >= programme.sections.length
-    if (
-      !estDerniereSection &&
-      maintenant - debutSectionRef.current >= sectionActuelle.dureeSecondes * 1000
-    ) {
+    if (estDerniereSection) {
+      // La dernière section n'a pas de durée propre : elle absorbe le temps restant de la
+      // séance et s'arrête donc au temps maxi du programme, plutôt que de continuer
+      // indéfiniment jusqu'à un arrêt manuel (qui peut être raté — cf. retour utilisateur).
+      const tempsEcoule = maintenant - debutSeanceRef.current
+      if (tempsEcoule >= programme.dureeTotaleSecondes * 1000) {
+        terminer('terminee', maintenant)
+        return
+      }
+    } else if (maintenant - debutSectionRef.current >= sectionActuelle.dureeSecondes * 1000) {
       passerSectionSuivante(maintenant)
     }
     const candidat = candidatRef.current
@@ -404,7 +428,7 @@ export default function Seance() {
       demarrerNouveauSegment(candidat.valeur, maintenant)
       candidatRef.current = null
     }
-  }, [phase, maintenant, programme, sectionActuelle, passerSectionSuivante, clorreSegment])
+  }, [phase, maintenant, programme, sectionActuelle, passerSectionSuivante, clorreSegment, terminer])
 
   // Le compteur général continue pendant la pause (la pause fait partie de la séance) ;
   // la section en cours, elle, se fige à l'instant de la mise en pause (voir mettreEnPause).
@@ -468,39 +492,80 @@ export default function Seance() {
     tempsRestantSeance <= DECOMPTE_FINAL_SEANCE_MS,
   ])
 
+  // Met en avant (surbrillance temporaire) Nerzh et/ou Tizh au début d'une section Effort
+  // Intense, uniquement s'ils diffèrent de la précédente section Effort Intense (on saute
+  // les récupérations) — pas sur Padelezh, qui change presque toujours et est "imposé"
+  // (cf. retour utilisateur : ce qu'on veut voir, c'est ce qui change dans l'effort à fournir).
+  const [surbrillance, setSurbrillance] = useState({ nerzh: false, tizh: false })
+  useEffect(() => {
+    if (phase !== 'en_cours' || !programme || !sectionActuelle || sectionActuelle.role !== 'effort') {
+      setSurbrillance({ nerzh: false, tizh: false })
+      return
+    }
+    let precedente: Programme['sections'][number] | undefined
+    for (let i = sectionIndex - 1; i >= 0; i--) {
+      if (programme.sections[i].role === 'effort') {
+        precedente = programme.sections[i]
+        break
+      }
+    }
+    if (!precedente) {
+      setSurbrillance({ nerzh: false, tizh: false })
+      return
+    }
+    setSurbrillance({
+      nerzh: precedente.nerzh !== sectionActuelle.nerzh,
+      tizh: precedente.tizh !== sectionActuelle.tizh,
+    })
+    const id = setTimeout(() => setSurbrillance({ nerzh: false, tizh: false }), 2500)
+    return () => clearTimeout(id)
+  }, [phase, programme, sectionIndex, sectionActuelle])
+
   async function connecter() {
     setErreur(null)
     try {
       const conn = ble.current
-      await conn.connect()
-      await conn.prendreLeControle()
-      await conn.subscribeRowerData((data) => {
-        setTizhReel(data.tizh)
-        tizhSommeRef.current += data.tizh
-        tizhCompteRef.current += 1
-        if (data.distanceMetres !== undefined) {
-          distanceMetresRef.current = data.distanceMetres
-        }
-        if (data.totalEnergyKcal !== undefined) {
-          energieKcalRef.current = data.totalEnergyKcal
-        }
-      })
-      await conn.subscribeStatus((event) => {
-        if (event.nerzh === undefined) return
-        setNerzhReel(event.nerzh)
-        const now = Date.now()
-        if (!segmentRef.current) {
-          demarrerNouveauSegment(event.nerzh, now)
-          return
-        }
-        if (event.nerzh === segmentRef.current.nerzh) {
-          candidatRef.current = null
-        } else if (candidatRef.current?.valeur === event.nerzh) {
-          // laisse le tick vérifier la stabilité de 5s
-        } else {
-          candidatRef.current = { valeur: event.nerzh, depuis: now }
-        }
-      })
+      await avecDelai(conn.connect(), 30_000, 'Recherche/connexion au rameur trop longue (30s) — réessaie.')
+      await avecDelai(
+        conn.prendreLeControle(),
+        10_000,
+        "Le rameur n'a pas répondu à la demande de contrôle (10s) — vérifie qu'il est allumé et réessaie.",
+      )
+      await avecDelai(
+        conn.subscribeRowerData((data) => {
+          setTizhReel(data.tizh)
+          tizhSommeRef.current += data.tizh
+          tizhCompteRef.current += 1
+          if (data.distanceMetres !== undefined) {
+            distanceMetresRef.current = data.distanceMetres
+          }
+          if (data.totalEnergyKcal !== undefined) {
+            energieKcalRef.current = data.totalEnergyKcal
+          }
+        }),
+        10_000,
+        "Les données du rameur ne sont pas arrivées (10s) — vérifie qu'il est allumé et réessaie.",
+      )
+      await avecDelai(
+        conn.subscribeStatus((event) => {
+          if (event.nerzh === undefined) return
+          setNerzhReel(event.nerzh)
+          const now = Date.now()
+          if (!segmentRef.current) {
+            demarrerNouveauSegment(event.nerzh, now)
+            return
+          }
+          if (event.nerzh === segmentRef.current.nerzh) {
+            candidatRef.current = null
+          } else if (candidatRef.current?.valeur === event.nerzh) {
+            // laisse le tick vérifier la stabilité de 5s
+          } else {
+            candidatRef.current = { valeur: event.nerzh, depuis: now }
+          }
+        }),
+        10_000,
+        "L'état du rameur n'est pas arrivé (10s) — vérifie qu'il est allumé et réessaie.",
+      )
       setConnecte(true)
     } catch (e) {
       setErreur(String((e as Error).message ?? e))
@@ -513,17 +578,25 @@ export default function Seance() {
     setErreur(null)
     try {
       const conn = kalonBle.current
-      await conn.connect()
-      await conn.subscribe((bpm) => {
-        setKalonReel(bpm)
-        kalonSommeRef.current += bpm
-        kalonCompteRef.current += 1
-        const zone = sectionRef.current?.zoneKalon
-        if (zone) {
-          kalonEchantillonsTotalRef.current += 1
-          if (bpm >= zone.min && bpm <= zone.max) kalonEchantillonsDansZoneRef.current += 1
-        }
-      })
+      await avecDelai(
+        conn.connect(),
+        30_000,
+        'Recherche/connexion à la ceinture trop longue (30s) — réessaie.',
+      )
+      await avecDelai(
+        conn.subscribe((bpm) => {
+          setKalonReel(bpm)
+          kalonSommeRef.current += bpm
+          kalonCompteRef.current += 1
+          const zone = sectionRef.current?.zoneKalon
+          if (zone) {
+            kalonEchantillonsTotalRef.current += 1
+            if (bpm >= zone.min && bpm <= zone.max) kalonEchantillonsDansZoneRef.current += 1
+          }
+        }),
+        10_000,
+        "Les données de la ceinture ne sont pas arrivées (10s) — vérifie qu'elle est bien portée et réessaie.",
+      )
       setConnecteKalon(true)
     } catch (e) {
       setErreur(String((e as Error).message ?? e))
@@ -772,13 +845,19 @@ export default function Seance() {
 
           <div className="grille-valeurs-courantes">
             <span className="ligne-valeur-label">Nerzh</span>
-            <span className="ligne-valeur-boite pastille-nerzh">
+            <span
+              className={`ligne-valeur-boite pastille-nerzh ${surbrillance.nerzh ? 'parametre-evolue' : ''}`}
+            >
               {nerzhReel ?? sectionActuelle?.nerzh}
             </span>
             <span />
 
             <span className="ligne-valeur-label">Tizh</span>
-            <span className="ligne-valeur-boite pastille-tizh">{sectionActuelle?.tizh}</span>
+            <span
+              className={`ligne-valeur-boite pastille-tizh ${surbrillance.tizh ? 'parametre-evolue' : ''}`}
+            >
+              {sectionActuelle?.tizh}
+            </span>
             <span className="ligne-valeur-unite">Riw/min</span>
 
             <span className="ligne-valeur-label">Amzervezh</span>
@@ -817,30 +896,6 @@ export default function Seance() {
               <div className="horloge-seance">{formatHHMMSS(tempsEcouleSeance)}</div>
               <div className="horloge-legende">hh:min:ss</div>
             </div>
-          </div>
-
-          <div className="bandeau-section-suivante">
-            {sectionSuivante ? (
-              <>
-                <strong>No. {sectionIndex + 2}</strong>
-                <span className="ligne-valeur-label">Nerzh</span>
-                <span className="ligne-valeur-boite boite-mini pastille-nerzh">
-                  {sectionSuivante.nerzh}
-                </span>
-                <span className="ligne-valeur-label">Tizh</span>
-                <span className="ligne-valeur-boite boite-mini pastille-tizh">
-                  {sectionSuivante.tizh}
-                </span>
-                <span className="ligne-valeur-unite">Riw/min</span>
-                <span className="ligne-valeur-label">Padelezh</span>
-                <span className="ligne-valeur-boite boite-mini pastille-neutre">
-                  {formatMMSS(sectionSuivante.dureeSecondes * 1000)}
-                </span>
-                <span className="ligne-valeur-unite">min:ss</span>
-              </>
-            ) : (
-              'Dernière section'
-            )}
           </div>
 
           <div className="actions-seance">

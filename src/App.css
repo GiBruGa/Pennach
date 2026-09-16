@@ -395,22 +395,27 @@ main.main-seance > * {
   font-size: 0.9rem;
 }
 
+/* Plus de positionnement absolu pour le bouton/les mentions légales : sur les petits
+   écrans Android (barre système/geste du bas incluse dans le viewport), un bloc centré
+   par min-height/justify-content pouvait déborder derrière un élément ancré en absolu.
+   Tout reste maintenant dans le flux normal, avec une marge basse qui respecte la zone
+   système (env(safe-area-inset-bottom)), et l'écran défile si le contenu ne tient pas. */
 .ecran-accueil {
-  position: relative;
   min-height: 100svh;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 20px;
   background: #0a1930;
-  padding: 24px;
+  padding: 24px 24px max(24px, env(safe-area-inset-bottom));
   text-align: center;
+  overflow-y: auto;
 }
 
 .logo-accueil {
-  width: min(90vw, 520px);
+  width: min(80vw, 420px);
 }
 
 .bouton-commencer {
@@ -423,8 +428,6 @@ main.main-seance > * {
 }
 
 .mentions-legales {
-  position: absolute;
-  bottom: 20px;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.6);
   max-width: 90vw;
@@ -1112,6 +1115,26 @@ textarea.arabat-detail-champ {
   white-space: nowrap;
 }
 
+/* Surbrillance temporaire (2.5s) sur Nerzh/Tizh au début d'une section Effort Intense,
+   seulement si la valeur diffère de la précédente section Effort Intense — cf. logique
+   dans Seance.tsx (surbrillance). Effet grossissant + halo, pas juste un clignotement,
+   pour rester visible même en cours d'effort. */
+@keyframes grossir-parametre {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+  30% {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.45);
+  }
+}
+
+.parametre-evolue {
+  animation: grossir-parametre 0.6s ease-in-out 2;
+}
+
 .ligne-valeur-boite {
   display: inline-flex;
   align-items: center;
@@ -1126,47 +1149,11 @@ textarea.arabat-detail-champ {
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-.ligne-valeur-boite.boite-mini {
-  height: clamp(14px, 5.25vh, 21px);
-  font-size: clamp(0.55rem, 3.25vh, 0.8125rem);
-  padding: 0 clamp(4px, 0.8vw, 7px);
-  min-width: clamp(20px, 3.4vw, 30px);
-}
-
 .ligne-valeur-unite {
   font-size: clamp(0.6rem, 4vh, 1rem);
   opacity: 0.75;
 }
 
-/* Bandeau fin section suivante, sur une seule ligne (pas de Kalon/Kemenn : priorité
-   donnée à la taille du cercle/horloge au-dessus). Pas de bandeau symétrique pour la
-   section précédente : illisible en plein effort, et la place libérée sert à
-   agrandir la carte de la section en cours (cf. SPEC.md). Fond bleu très clair pour
-   se distinguer de la carte blanche à gauche. */
-.bandeau-section-suivante {
-  align-self: stretch;
-  padding: clamp(4px, 2vh, 8px) clamp(8px, 1.6vw, 14px);
-  border-radius: 8px;
-  background: #dcebfb;
-  color: #1a1a1a;
-  font-size: clamp(0.55rem, 3.25vh, 0.8125rem);
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: clamp(5px, 2.5vh, 10px);
-  white-space: nowrap;
-}
-
-.bandeau-section-suivante .ligne-valeur-label {
-  font-size: inherit;
-  font-weight: 400;
-}
-
-.bandeau-section-suivante strong {
-  font-weight: 700;
-}
-
-/* Boutons Pause/Arrêter : sous le bandeau section suivante, même largeur que lui. */
 .actions-seance {
   align-self: stretch;
   display: flex;
@@ -1198,7 +1185,6 @@ textarea.arabat-detail-champ {
     align-items: center;
   }
 
-  .bandeau-section-suivante,
   .actions-seance {
     align-self: center;
     width: 100%;
