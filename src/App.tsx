@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { HashRouter, Link, Route, Routes, useLocation } from 'react-router-dom'
 import { ProfilProvider } from './context/ProfilContext'
 import { getProfil, getProfilActifId, oublierProfilActif, type Profil } from './lib/profil'
+import { supabase } from './lib/supabaseClient'
 import Accueil from './pages/Accueil'
 import SelectionProfil from './pages/SelectionProfil'
 import Seance from './pages/Seance'
@@ -123,6 +124,11 @@ export default function App() {
       majProfil={setProfil}
       changerProfil={() => {
         oublierProfilActif()
+        // La session Supabase Auth (protection de la Fiche) est globale au navigateur, pas
+        // liée au "profil" applicatif : sans ce signOut, un profil resterait connecté à la
+        // Fiche d'un autre membre de la famille après changement de profil sur l'appareil
+        // partagé (cf. plan santé étendu, garde-fou de sécurité central de ce chantier).
+        supabase.auth.signOut()
         setProfil(null)
       }}
     />

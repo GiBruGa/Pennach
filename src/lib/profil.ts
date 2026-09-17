@@ -32,7 +32,8 @@ export interface MesurePouez {
   date: string // ISO (YYYY-MM-DD)
   pouezKg: number
   tourTailleCm?: number
-  pourcentageMasseGrasse?: number
+  tourHancheCm?: number
+  pourcentageMasseGrasse?: number // saisie impédancemètre — prime sur l'estimation (cf. conseilSante.ts)
   pourcentageMasseMusculaire?: number
 }
 
@@ -96,10 +97,13 @@ export async function mettreAJourProfil(
   if (error) throw error
 }
 
+const COLONNES_MESURE_POUEZ =
+  'id, profil_id, date, pouez_kg, tour_taille_cm, tour_hanche_cm, pourcentage_masse_grasse, pourcentage_masse_musculaire'
+
 export async function listerMesuresPouez(profilId: string): Promise<MesurePouez[]> {
   const { data, error } = await supabase
     .from('mesures_poids')
-    .select('id, profil_id, date, pouez_kg')
+    .select(COLONNES_MESURE_POUEZ)
     .eq('profil_id', profilId)
     .order('date', { ascending: true })
   if (error) throw error
@@ -108,17 +112,30 @@ export async function listerMesuresPouez(profilId: string): Promise<MesurePouez[
     profilId: l.profil_id,
     date: l.date,
     pouezKg: l.pouez_kg,
+    tourTailleCm: l.tour_taille_cm ?? undefined,
+    tourHancheCm: l.tour_hanche_cm ?? undefined,
+    pourcentageMasseGrasse: l.pourcentage_masse_grasse ?? undefined,
+    pourcentageMasseMusculaire: l.pourcentage_masse_musculaire ?? undefined,
   }))
 }
 
 export async function enregistrerMesurePouez(
   profilId: string,
   date: string,
-  pouezKg: number,
+  mesure: Pick<MesurePouez, 'pouezKg' | 'tourTailleCm' | 'tourHancheCm' | 'pourcentageMasseGrasse' | 'pourcentageMasseMusculaire'>,
 ): Promise<void> {
-  const { error } = await supabase
-    .from('mesures_poids')
-    .upsert({ profil_id: profilId, date, pouez_kg: pouezKg }, { onConflict: 'profil_id,date' })
+  const { error } = await supabase.from('mesures_poids').upsert(
+    {
+      profil_id: profilId,
+      date,
+      pouez_kg: mesure.pouezKg,
+      tour_taille_cm: mesure.tourTailleCm ?? null,
+      tour_hanche_cm: mesure.tourHancheCm ?? null,
+      pourcentage_masse_grasse: mesure.pourcentageMasseGrasse ?? null,
+      pourcentage_masse_musculaire: mesure.pourcentageMasseMusculaire ?? null,
+    },
+    { onConflict: 'profil_id,date' },
+  )
   if (error) throw error
 }
 

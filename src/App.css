@@ -201,6 +201,98 @@
   opacity: 0.9;
 }
 
+.graphique-imc {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  aspect-ratio: 300 / 160;
+  display: block;
+  margin: 8px 0;
+  border-radius: 8px;
+}
+
+.conseil-sante {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.9rem;
+}
+
+.conseil-medecin {
+  font-weight: 700;
+  color: #d9762b;
+}
+
+.disclaimer-sante {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.indicateurs-sante-complementaires {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin: 4px 0;
+}
+
+.badge-estime {
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.8;
+}
+
+.ecran-protection-fiche {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.formulaire-protection-fiche {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formulaire-protection-fiche input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.liens-protection-fiche {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.liens-protection-fiche button {
+  background: none;
+  border: none;
+  color: var(--text);
+  opacity: 0.75;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.info-protection-fiche {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
 main {
   flex: 1;
   padding: 16px;
