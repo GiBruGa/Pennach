@@ -27,6 +27,9 @@ dist-ssr
 /*.woff2
 /~$*
 
+# Scratch (scripts de vérification, exports temporaires) — travail de session Claude
+/.scratch/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
