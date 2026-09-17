@@ -4,7 +4,7 @@ import { useProfil } from '../context/ProfilContext'
 import { getOuCreerCarnet, savePlanProgression } from '../lib/storage'
 import { TYPES_SEANCE } from '../lib/typesEntrainement'
 import { listerMesuresPouez } from '../lib/profil'
-import { dureeObjectifParDefaut, genererProgression20Seances } from '../lib/progression'
+import { dureeObjectifParDefaut, genererProgression20Seances, type NiveauPratique } from '../lib/progression'
 import type { EtapeProgression, PlanProgression } from '../types'
 
 function nouvelleEtape(numero: number): EtapeProgression {
@@ -25,6 +25,7 @@ export default function CarnetDeSuivi() {
   const [dureeMiniRegen, setDureeMiniRegen] = useState(45)
   const [dureeObjectifRegen, setDureeObjectifRegen] = useState(() => dureeObjectifParDefaut(45))
   const [frequenceRegen, setFrequenceRegen] = useState(3)
+  const [niveauPratiqueRegen, setNiveauPratiqueRegen] = useState<NiveauPratique>('confirme')
   const [regenerationEnCours, setRegenerationEnCours] = useState(false)
   const [erreurRegen, setErreurRegen] = useState<string | null>(null)
 
@@ -73,6 +74,7 @@ export default function CarnetDeSuivi() {
         dernierePouezKg,
         dureeMiniMinutes: dureeMiniRegen,
         dureeObjectifMinutes: dureeObjectifRegen,
+        niveauPratique: niveauPratiqueRegen,
       })
       const etapes = [...realisees, ...nouvelles].map((e, i) => ({ ...e, numero: i + 1 }))
       const carnetMaj = { ...carnet, etapes }
@@ -113,13 +115,27 @@ export default function CarnetDeSuivi() {
             </select>
           </label>
           <label>
+            Niveau de pratique
+            <select
+              value={niveauPratiqueRegen}
+              onChange={(e) => setNiveauPratiqueRegen(e.target.value as NiveauPratique)}
+            >
+              <option value="debutant">Débutant</option>
+              <option value="confirme">Confirmé</option>
+              <option value="expert">Expert</option>
+            </select>
+            <span className="aide-champ-fiche">
+              Pratique déjà acquise (aviron/cardio) — en complément de l'IMC pour caler le niveau de départ
+            </span>
+          </label>
+          <label>
             Durée mini
             <input
               type="number"
               min={25}
               max={75}
-              value={dureeMiniRegen}
-              onChange={(e) => setDureeMiniRegen(Number(e.target.value))}
+              value={dureeMiniRegen || ''}
+              onChange={(e) => setDureeMiniRegen(e.target.value === '' ? 0 : Number(e.target.value))}
             />
             <span className="aide-champ-fiche">min — toujours atteignable, même les jours chargés (25 à 75)</span>
           </label>
@@ -129,8 +145,8 @@ export default function CarnetDeSuivi() {
               type="number"
               min={dureeMiniRegen}
               max={75}
-              value={dureeObjectifRegen}
-              onChange={(e) => setDureeObjectifRegen(Number(e.target.value))}
+              value={dureeObjectifRegen || ''}
+              onChange={(e) => setDureeObjectifRegen(e.target.value === '' ? 0 : Number(e.target.value))}
             />
             <span className="aide-champ-fiche">min — visée en fin de programme (suggestion : mini + 15, jusqu'à 75)</span>
           </label>

@@ -112,11 +112,14 @@ export default function EtapeDetail() {
                 min={1}
                 max={10}
                 className="param-detail-boite pastille-nerzh"
-                value={brouillon.parametres.puissance}
+                value={brouillon.parametres.puissance || ''}
                 onChange={(e) =>
                   setBrouillon({
                     ...brouillon,
-                    parametres: { ...brouillon.parametres, puissance: Number(e.target.value) },
+                    parametres: {
+                      ...brouillon.parametres,
+                      puissance: e.target.value === '' ? 0 : Number(e.target.value),
+                    },
                   })
                 }
               />
@@ -135,11 +138,14 @@ export default function EtapeDetail() {
                 min={1}
                 max={10}
                 className="param-detail-boite pastille-tizh"
-                value={brouillon.parametres.rythme}
+                value={brouillon.parametres.rythme || ''}
                 onChange={(e) =>
                   setBrouillon({
                     ...brouillon,
-                    parametres: { ...brouillon.parametres, rythme: Number(e.target.value) },
+                    parametres: {
+                      ...brouillon.parametres,
+                      rythme: e.target.value === '' ? 0 : Number(e.target.value),
+                    },
                   })
                 }
               />
@@ -160,11 +166,14 @@ export default function EtapeDetail() {
                 min={1}
                 max={10}
                 className="param-detail-boite pastille-adnerzhan"
-                value={brouillon.parametres.recuperation}
+                value={brouillon.parametres.recuperation || ''}
                 onChange={(e) =>
                   setBrouillon({
                     ...brouillon,
-                    parametres: { ...brouillon.parametres, recuperation: Number(e.target.value) },
+                    parametres: {
+                      ...brouillon.parametres,
+                      recuperation: e.target.value === '' ? 0 : Number(e.target.value),
+                    },
                   })
                 }
               />
@@ -185,11 +194,14 @@ export default function EtapeDetail() {
                 min={25}
                 max={75}
                 className="param-detail-boite pastille-padelezh"
-                value={brouillon.parametres.dureeTotaleMinutes}
+                value={brouillon.parametres.dureeTotaleMinutes || ''}
                 onChange={(e) =>
                   setBrouillon({
                     ...brouillon,
-                    parametres: { ...brouillon.parametres, dureeTotaleMinutes: Number(e.target.value) },
+                    parametres: {
+                      ...brouillon.parametres,
+                      dureeTotaleMinutes: e.target.value === '' ? 0 : Number(e.target.value),
+                    },
                   })
                 }
               />
