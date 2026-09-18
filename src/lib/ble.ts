@@ -115,6 +115,10 @@ export class RowerConnection {
   private server: BluetoothRemoteGATTServer | null = null
   private controlPoint: BluetoothRemoteGATTCharacteristic | null = null
   private controlResponseResolvers: Array<(success: boolean) => void> = []
+  private rowerDataCharacteristic: BluetoothRemoteGATTCharacteristic | null = null
+  private statusCharacteristic: BluetoothRemoteGATTCharacteristic | null = null
+  private onRowerData: ((data: RowerData) => void) | null = null
+  private onStatus: ((event: StatusEvent) => void) | null = null
 
   async connect(): Promise<void> {
     this.device = await navigator.bluetooth.requestDevice({
@@ -128,30 +132,42 @@ export class RowerConnection {
     this.device = null
     this.server = null
     this.controlPoint = null
+    this.rowerDataCharacteristic = null
+    this.statusCharacteristic = null
   }
 
   get nomAppareil(): string | undefined {
     return this.device?.name
   }
 
+  // Idempotent (garde la caractéristique déjà abonnée en mémoire) : un appel répété — par
+  // exemple un réessai après l'expiration du délai côté appelant, cf. avecReessais dans
+  // Seance.tsx — ne fait que remplacer le handler, sans ré-enregistrer un second listener
+  // JS sur la même notification BLE (ce qui doublerait chaque donnée reçue).
   async subscribeRowerData(onData: (data: RowerData) => void): Promise<void> {
+    this.onRowerData = onData
+    if (this.rowerDataCharacteristic) return
     const service = await this.server!.getPrimaryService('fitness_machine')
     const characteristic = await service.getCharacteristic('rower_data')
     characteristic.addEventListener('characteristicvaluechanged', () => {
       const value = characteristic.value
-      if (value) onData(parseRowerData(value))
+      if (value) this.onRowerData?.(parseRowerData(value))
     })
     await characteristic.startNotifications()
+    this.rowerDataCharacteristic = characteristic
   }
 
   async subscribeStatus(onStatus: (event: StatusEvent) => void): Promise<void> {
+    this.onStatus = onStatus
+    if (this.statusCharacteristic) return
     const service = await this.server!.getPrimaryService('fitness_machine')
     const characteristic = await service.getCharacteristic('fitness_machine_status')
     characteristic.addEventListener('characteristicvaluechanged', () => {
       const value = characteristic.value
-      if (value) onStatus(parseFitnessMachineStatus(value))
+      if (value) this.onStatus?.(parseFitnessMachineStatus(value))
     })
     await characteristic.startNotifications()
+    this.statusCharacteristic = characteristic
   }
 
   async getResistanceRange(): Promise<ResistanceRange> {
@@ -216,6 +232,8 @@ export function parseFrequenceCardiaque(value: DataView): number {
 export class HeartRateConnection {
   private device: BluetoothDevice | null = null
   private server: BluetoothRemoteGATTServer | null = null
+  private measurementCharacteristic: BluetoothRemoteGATTCharacteristic | null = null
+  private onFrequence: ((bpm: number) => void) | null = null
 
   async connect(): Promise<void> {
     this.device = await navigator.bluetooth.requestDevice({
@@ -228,19 +246,25 @@ export class HeartRateConnection {
     this.server?.disconnect()
     this.device = null
     this.server = null
+    this.measurementCharacteristic = null
   }
 
   get nomAppareil(): string | undefined {
     return this.device?.name
   }
 
+  // Idempotent, même principe que RowerConnection.subscribeRowerData (cf. commentaire
+  // là-bas) : sûr à rappeler lors d'un réessai après un délai expiré.
   async subscribe(onFrequence: (bpm: number) => void): Promise<void> {
+    this.onFrequence = onFrequence
+    if (this.measurementCharacteristic) return
     const service = await this.server!.getPrimaryService('heart_rate')
     const characteristic = await service.getCharacteristic('heart_rate_measurement')
     characteristic.addEventListener('characteristicvaluechanged', () => {
       const value = characteristic.value
-      if (value) onFrequence(parseFrequenceCardiaque(value))
+      if (value) this.onFrequence?.(parseFrequenceCardiaque(value))
     })
     await characteristic.startNotifications()
+    this.measurementCharacteristic = characteristic
   }
 }

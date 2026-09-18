@@ -49,6 +49,23 @@ function avecDelai<T>(promesse: Promise<T>, delaiMs: number, messageDelai: strin
   })
 }
 
+// Certains rameurs mettent du temps à répondre à une étape de l'appairage sans que ce soit
+// définitif (radio occupée, machine encore en train de s'initialiser) — retour terrain du
+// 18/09 : un seul essai de 10s abandonnait trop vite. 3 essais avant d'abandonner pour de
+// bon, avec une courte pause entre chaque pour laisser le rameur respirer.
+async function avecReessais<T>(tentative: () => Promise<T>, nbTentatives: number, pauseMs: number): Promise<T> {
+  let derniereErreur: unknown
+  for (let i = 0; i < nbTentatives; i++) {
+    try {
+      return await tentative()
+    } catch (e) {
+      derniereErreur = e
+      if (i < nbTentatives - 1) await new Promise((resolve) => setTimeout(resolve, pauseMs))
+    }
+  }
+  throw derniereErreur
+}
+
 // Résumé chiffré "avant séance" : s'appuie sur le rôle explicite de chaque section
 // (posé par le générateur, cf. typesEntrainement.ts) plutôt que de le redéviner depuis
 // les valeurs — un simple comptage de pics arrondi à l'entier ne suffit pas à distinguer
@@ -525,46 +542,63 @@ export default function Seance() {
     setErreur(null)
     try {
       const conn = ble.current
-      await avecDelai(conn.connect(), 30_000, 'Recherche/connexion au rameur trop longue (30s) — réessaie.')
-      await avecDelai(
-        conn.prendreLeControle(),
-        10_000,
-        "Le rameur n'a pas répondu à la demande de contrôle (10s) — vérifie qu'il est allumé et réessaie.",
+      // Pas de réessai automatique ici : requestDevice() rouvre la fenêtre de sélection
+      // Bluetooth du système, ce serait perturbant de la voir resurgir sans intervention.
+      await avecDelai(conn.connect(), 45_000, 'Recherche/connexion au rameur trop longue (45s) — réessaie.')
+      await avecReessais(
+        () =>
+          avecDelai(
+            conn.prendreLeControle(),
+            25_000,
+            "Le rameur n'a pas répondu à la demande de contrôle (25s) — vérifie qu'il est allumé et réessaie.",
+          ),
+        3,
+        2_000,
       )
-      await avecDelai(
-        conn.subscribeRowerData((data) => {
-          setTizhReel(data.tizh)
-          tizhSommeRef.current += data.tizh
-          tizhCompteRef.current += 1
-          if (data.distanceMetres !== undefined) {
-            distanceMetresRef.current = data.distanceMetres
-          }
-          if (data.totalEnergyKcal !== undefined) {
-            energieKcalRef.current = data.totalEnergyKcal
-          }
-        }),
-        10_000,
-        "Les données du rameur ne sont pas arrivées (10s) — vérifie qu'il est allumé et réessaie.",
+      await avecReessais(
+        () =>
+          avecDelai(
+            conn.subscribeRowerData((data) => {
+              setTizhReel(data.tizh)
+              tizhSommeRef.current += data.tizh
+              tizhCompteRef.current += 1
+              if (data.distanceMetres !== undefined) {
+                distanceMetresRef.current = data.distanceMetres
+              }
+              if (data.totalEnergyKcal !== undefined) {
+                energieKcalRef.current = data.totalEnergyKcal
+              }
+            }),
+            25_000,
+            "Les données du rameur ne sont pas arrivées (25s) — vérifie qu'il est allumé et réessaie.",
+          ),
+        3,
+        2_000,
       )
-      await avecDelai(
-        conn.subscribeStatus((event) => {
-          if (event.nerzh === undefined) return
-          setNerzhReel(event.nerzh)
-          const now = Date.now()
-          if (!segmentRef.current) {
-            demarrerNouveauSegment(event.nerzh, now)
-            return
-          }
-          if (event.nerzh === segmentRef.current.nerzh) {
-            candidatRef.current = null
-          } else if (candidatRef.current?.valeur === event.nerzh) {
-            // laisse le tick vérifier la stabilité de 5s
-          } else {
-            candidatRef.current = { valeur: event.nerzh, depuis: now }
-          }
-        }),
-        10_000,
-        "L'état du rameur n'est pas arrivé (10s) — vérifie qu'il est allumé et réessaie.",
+      await avecReessais(
+        () =>
+          avecDelai(
+            conn.subscribeStatus((event) => {
+              if (event.nerzh === undefined) return
+              setNerzhReel(event.nerzh)
+              const now = Date.now()
+              if (!segmentRef.current) {
+                demarrerNouveauSegment(event.nerzh, now)
+                return
+              }
+              if (event.nerzh === segmentRef.current.nerzh) {
+                candidatRef.current = null
+              } else if (candidatRef.current?.valeur === event.nerzh) {
+                // laisse le tick vérifier la stabilité de 5s
+              } else {
+                candidatRef.current = { valeur: event.nerzh, depuis: now }
+              }
+            }),
+            25_000,
+            "L'état du rameur n'est pas arrivé (25s) — vérifie qu'il est allumé et réessaie.",
+          ),
+        3,
+        2_000,
       )
       setConnecte(true)
     } catch (e) {
@@ -580,22 +614,27 @@ export default function Seance() {
       const conn = kalonBle.current
       await avecDelai(
         conn.connect(),
-        30_000,
-        'Recherche/connexion à la ceinture trop longue (30s) — réessaie.',
+        45_000,
+        'Recherche/connexion à la ceinture trop longue (45s) — réessaie.',
       )
-      await avecDelai(
-        conn.subscribe((bpm) => {
-          setKalonReel(bpm)
-          kalonSommeRef.current += bpm
-          kalonCompteRef.current += 1
-          const zone = sectionRef.current?.zoneKalon
-          if (zone) {
-            kalonEchantillonsTotalRef.current += 1
-            if (bpm >= zone.min && bpm <= zone.max) kalonEchantillonsDansZoneRef.current += 1
-          }
-        }),
-        10_000,
-        "Les données de la ceinture ne sont pas arrivées (10s) — vérifie qu'elle est bien portée et réessaie.",
+      await avecReessais(
+        () =>
+          avecDelai(
+            conn.subscribe((bpm) => {
+              setKalonReel(bpm)
+              kalonSommeRef.current += bpm
+              kalonCompteRef.current += 1
+              const zone = sectionRef.current?.zoneKalon
+              if (zone) {
+                kalonEchantillonsTotalRef.current += 1
+                if (bpm >= zone.min && bpm <= zone.max) kalonEchantillonsDansZoneRef.current += 1
+              }
+            }),
+            25_000,
+            "Les données de la ceinture ne sont pas arrivées (25s) — vérifie qu'elle est bien portée et réessaie.",
+          ),
+        3,
+        2_000,
       )
       setConnecteKalon(true)
     } catch (e) {
